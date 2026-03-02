@@ -1,0 +1,20 @@
+---
+title: "Project Background"
+author: "Markus Min"
+date: "`r Sys.Date()`"
+output:
+  html_document
+bibliography: recruitment-ML.bib
+csl: ecology.csl
+---
+
+## Background
+
+This project seeks to further our ecological understanding of the processes that drive boom-bust recruitment dynamics in west coast groundfishes. In these stocks, recruitment dynamics are characterized by recruitment that is typically low (bust years), punctuated by years of high recruitment (boom years). We hypothesize that these dynamics are driven by multiple processes acting together, where conditions across each of these processes must be good to lead to high recruitment, but failure in only one process can lead to overall recruitment failure. As such, we seek to develop an analytical framework that explores the environmental covariates that can explain these dynamics, relying on methods that can detect non-linear relationships between predictor variables and recruitment.
+
+As a secondary goal, this project aims to develop more ways to incorporate information into the assessment process. For example, on-ramps for qualitative ecosystem information in groundfish management are being actively developed by the Pacific Fishery Management Council (PFMC) through the use of risk tables [@Golden2025]. These risk tables take various sources of qualitative information (e.g., ecosystem conditions, socioeconomic factors, data availability) and classify this information as indicating poor, average, or good conditions for the stock. As such, short-term qualitative forecasts (i.e., being able to forecast if recruitment is likely strong or poor given the current environmental conditions) for groundfish recruitment could be integrated into these existing and developing management frameworks. However - as this is a secondary goal of this project, the choice of predictor variables will not be limited by the indicators that would be available in near-real-time for forecasting.
+
+<br>
+
+## References 
+

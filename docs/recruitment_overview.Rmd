@@ -1,0 +1,92 @@
+---
+title: "JSOES Bongo Data Exploratory Analysis"
+author: "Markus Min"
+date: "`r Sys.Date()`"
+output:
+  html_document
+---
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+## Recruitment Data
+
+Recruitment data will be extracted from the latest stock assessment for a species. This can be an update or a full (benchmark) assessment, but because of the lag for fish actually entering the surveys, no recruitment deviations will be available from the year of the assessment minus the number of years before individuals actually recruit to the stock. For example, for Dover Sole, this is approximately five years. The start of the recruitment time series also coincides with the first years that recruitment is informed by age compositions. For most stocks, this is somewhere around 1970. Stachura et al. 2014 uses 1968 as the first year for most stocks, saying that "we only used stocks and years for which recruitment was estimated (not assumed to perfectly follow a specified stock–recruitment relationship without error) in the analysis." Sablefish first year is 1975.
+
+To determine the years where 
+
+
+
+How would we describe recruitment of west coast groundfishes? What would the distribution look like?
+- Usually average, 
+
+- episodic recruitment events - where a few year classes dominate the population
+
+
+
+Here are the stocks that have been assessed in the last five years. For stocks that have been listed multiple times in the last five years, only the most recent assessment is listed. If we were to go back further in time, we would not have a long period of overlap with the hindcast models.
+
+Given the species listed here, it might be interesting to focus on five or six species that have been recently assessed. Notably, all three species that were the focus of mechanistic investigations of recruitment have all been assessed in the past three years: Pacific Hake (2024), Sablefish (2025), and Petrale Sole (2023). To these three species, we could consider adding some rockfishes.
+
+
+### Classifying recruitment data
+
+There are many ways to classify estimated recruitment into a categorical response variable. Three potential options are listed below, along with visuals using Petrale sole as an example stock.
+
+
+#### Stachura et al. 2014
+
+@Stachura2014 examined synchrony in extreme recruitment events among West Coast groundfishes by identifying the years corresponding to the weakest (<25th percentile), average (middle 50th percentile), and strongest (>75th percentile) stock–recruitment residuals for each stock.
+
+#### Boom/bust 
+
+The classification used by @Stachura2014 uses quantiles, which may lead to arbitrary cutoffs between different classifications. For example, as seen in the plot above, this quantile-based approach leads to years with very similar recruitment estimates being assigned to different classifications.
+
+Another way to divide up recruitment into three categories would be to use some sort of cutoff from the distribution of the data to set breakpoints. A simple way to do this would be to call any year with recruitment > 1 SD above the long-term mean a "boom" recruitment event, any year with recruitment < 1 SD below the long-term mean a "bust" recruitment event, and all years within 1 SD of the long-term mean an "average" year. 
+
+
+#### Episodic recruitment
+
+It has been noted previously that West Coast groundfishes exhibit episodic recruitment, where occasional recruitment events lead to a few year classes dominating the population. To classify recruitment events according to this "episodic recruitment" paradigm, we could use the 1 SD above the long-term mean breakpoint to identify these episodic events, and classify all other years as "baseline" years, where a recruitment event did not occur.
+
+This classification approach shares some similarities with the emerging idea of identifying "bright spots" in conservation and ecology [@Embke2025]. This idea suggests that focusing on these positive outliers can help identify key drivers. This is also, notably, in contrast to the emerging "poor-recruitment paradigm," which asserts that it is easier to identify poor recruitment years than good recruitment years [@Gross2022]. According to the authors, "This approach hypothesizes that it is easier to predict poor recruitment rather than good recruitment because an environmental variable affects recruitment only when its value is extreme (lethal); otherwise, the variable may be benign and not influence recruitment. Thus, good recruitment necessitates all environmental conditions not be harmful and for some to be especially favorable; poor recruitment, however, requires only one environmental variable to be extreme."
+
+
+
+##### 2025
+
+- Yellowtail Rockfish
+- Sablefish
+- Rougheye/Blackspotted Rockfish (cryptic species complex)
+- Chilipepper Rockfish
+- CA Quillback Rockfish
+
+Note that as of December 10, 2025, the assessment model files for these stocks have not yet been posted on the Council website. However, the assessment model files should be available from the stock assessors if we need them.
+
+##### 2024
+
+- Hake (the assessment files posted on the council website don't have a Report file)
+
+##### 2023
+
+- Yelloweye Rockfish (this is a catch only projection and not a full assessment, and therefore should not be included)
+- Widow Rockfish (this is a catch only projection and not a full assessment, and therefore should not be included)
+- Shortspine Thornyhead
+- Petrale Sole
+- CA Copper Rockfish
+- Black Rockfish
+- Rex Sole
+- Canary Rockfish
+
+##### 2021
+
+- Lingcod
+- WA Vermilion Rockfish
+- OR Vermilion Rockfish
+- Northern CA Vermilion and Sunset Rockfish
+- Northern CA Vermilion and Sunset Rockfish
+- Squarespot Rockfish
+- Spiny Dogfish
+- Dover Sole
+- WA Copper Rockfish
+- OR Copper Rockfish

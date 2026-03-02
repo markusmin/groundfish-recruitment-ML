@@ -1,0 +1,25 @@
+name: "Windows of Recruitment Success in West Coast Groundfishes"
+output_dir: "."
+navbar:
+  title: "Home"
+  left:
+    - text: "Project Background"
+      href: project_background.html   
+    - text: "Data visualizations"
+      menu:  
+      - text: "Recruitment data"
+        href: recruit_overview.html
+      - text: "Covariates"
+        href: covariates_overview.html
+    - text: "Analyses"
+      menu:  
+      - text: "Multivariate analyses"
+        href: multivariate_analyses.html   
+      - text: "One-Year-Ahead Prediction"
+        href: ml_predictions.html   
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+    toc_depth: 3
