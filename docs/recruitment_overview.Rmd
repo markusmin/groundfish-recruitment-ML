@@ -15,87 +15,44 @@ library(diptest)
 source(here::here("R", "functions", "load_reformat_data.R"))
 ```
 
-## Recruitment Data
+## Background
 
-Recruitment data will be extracted from the latest stock assessment for a species. This can be an update or a full (benchmark) assessment, but because of the lag for fish actually entering the surveys, no recruitment deviations will be available from the year of the assessment minus the number of years before individuals actually recruit to the stock. For example, for Dover Sole, this is approximately five years. The start of the recruitment time series also coincides with the first years that recruitment is informed by age compositions. For most stocks, this is somewhere around 1970. Stachura et al. 2014 uses 1968 as the first year for most stocks, saying that "we only used stocks and years for which recruitment was estimated (not assumed to perfectly follow a specified stock–recruitment relationship without error) in the analysis." Sablefish first year is 1975.
+Recruitment estimates are extracted from [stock assessments conducted within the last five years](https://www.pcouncil.org/stock-assessments-star-reports-stat-reports-rebuilding-analyses-terms-of-reference/groundfish-stock-assessment-documents/). Recruitment estimates were only extracted from assessments where recruitment deviations were estimated in the model. These assessments were all conducted using Stock Synthesis, which estimates annual recruitment in an integrated modeling framework, where recruitment is informed by multiple data sources to the model, but primarily age and length compositions.
 
-To determine the years where 
+The recruitment estimates we are using for this analysis are the log recruitment deviations around a Beverton-Holt stock-recruitment function, with their variability constrained by a parameter called SigmaR, which functions similarly to the standard deviation of a random effect. Recruitment deviations can either be estimated with a constraint where the annual deviations must sum to zero or where this constraint is lifted.
+
+For our stocks, these stocks had a sum to zero constraint:
+
+- Black Rockfish, Central CA (2023)
+- Black Rockfish, Northern CA (2023)
+- Black Rockfish, OR (2023)
+- Black Rockfish, WA (2023)
+- Canary Rockfish (2023)
+- Dover Sole (2021)
+- Lingcod, South of 40°10'N (2021)
+- Lingcod, North of 40°10'N (2021)
+- Quillback Rockfish, CA (2025)
+- Rex Sole (2023)
+- Vermilion/Sunset Rockfish, Southern CA (2021)
+- Vermilion/Sunset Rockfish, Northern CA (2021)
+- Vermilion/Sunset Rockfish, Oregon (2021)
+- Vermilion/Sunset Rockfish, Washington (2021)
+- Yelloweye Rockfish (2025)
+- Yellowtail Rockfish (2025)
 
 
+These stocks did not have a sum to zero constraint:
 
-How would we describe recruitment of west coast groundfishes? What would the distribution look like?
-- Usually average, 
+- Copper Rockfish, Southern CA (2023)
+- Copper Rockfish, Northern CA (2023)
+- Petrale Sole (2023)
+- Rougheye/Blackspotted Rockfish (2025)
+- Sablefish (2025)
 
-- episodic recruitment events - where a few year classes dominate the population
-
-
-
-Here are the stocks that have been assessed in the last five years. For stocks that have been listed multiple times in the last five years, only the most recent assessment is listed. If we were to go back further in time, we would not have a long period of overlap with the hindcast models.
-
-Given the species listed here, it might be interesting to focus on five or six species that have been recently assessed. Notably, all three species that were the focus of mechanistic investigations of recruitment have all been assessed in the past three years: Pacific Hake (2024), Sablefish (2025), and Petrale Sole (2023). To these three species, we could consider adding some rockfishes.
-
-
-### Classifying recruitment data
-
-There are many ways to classify estimated recruitment into a categorical response variable. Three potential options are listed below, along with visuals using Petrale sole as an example stock.
-
-
-#### Stachura et al. 2014
-
-@Stachura2014 examined synchrony in extreme recruitment events among West Coast groundfishes by identifying the years corresponding to the weakest (<25th percentile), average (middle 50th percentile), and strongest (>75th percentile) stock–recruitment residuals for each stock.
 
 #### Boom/bust 
 
-The classification used by @Stachura2014 uses quantiles, which may lead to arbitrary cutoffs between different classifications. For example, as seen in the plot above, this quantile-based approach leads to years with very similar recruitment estimates being assigned to different classifications.
-
-Another way to divide up recruitment into three categories would be to use some sort of cutoff from the distribution of the data to set breakpoints. A simple way to do this would be to call any year with recruitment > 1 SD above the long-term mean a "boom" recruitment event, any year with recruitment < 1 SD below the long-term mean a "bust" recruitment event, and all years within 1 SD of the long-term mean an "average" year. 
-
-
-#### Episodic recruitment
-
-It has been noted previously that West Coast groundfishes exhibit episodic recruitment, where occasional recruitment events lead to a few year classes dominating the population. To classify recruitment events according to this "episodic recruitment" paradigm, we could use the 1 SD above the long-term mean breakpoint to identify these episodic events, and classify all other years as "baseline" years, where a recruitment event did not occur.
-
-This classification approach shares some similarities with the emerging idea of identifying "bright spots" in conservation and ecology [@Embke2025]. This idea suggests that focusing on these positive outliers can help identify key drivers. This is also, notably, in contrast to the emerging "poor-recruitment paradigm," which asserts that it is easier to identify poor recruitment years than good recruitment years [@Gross2022]. According to the authors, "This approach hypothesizes that it is easier to predict poor recruitment rather than good recruitment because an environmental variable affects recruitment only when its value is extreme (lethal); otherwise, the variable may be benign and not influence recruitment. Thus, good recruitment necessitates all environmental conditions not be harmful and for some to be especially favorable; poor recruitment, however, requires only one environmental variable to be extreme."
-
-
-
-##### 2025
-
-- Yellowtail Rockfish
-- Sablefish
-- Rougheye/Blackspotted Rockfish (cryptic species complex)
-- Chilipepper Rockfish
-- CA Quillback Rockfish
-
-Note that as of December 10, 2025, the assessment model files for these stocks have not yet been posted on the Council website. However, the assessment model files should be available from the stock assessors if we need them.
-
-##### 2024
-
-- Hake (the assessment files posted on the council website don't have a Report file)
-
-##### 2023
-
-- Yelloweye Rockfish (this is a catch only projection and not a full assessment, and therefore should not be included)
-- Widow Rockfish (this is a catch only projection and not a full assessment, and therefore should not be included)
-- Shortspine Thornyhead
-- Petrale Sole
-- CA Copper Rockfish
-- Black Rockfish
-- Rex Sole
-- Canary Rockfish
-
-##### 2021
-
-- Lingcod
-- WA Vermilion Rockfish
-- OR Vermilion Rockfish
-- Northern CA Vermilion and Sunset Rockfish
-- Northern CA Vermilion and Sunset Rockfish
-- Squarespot Rockfish
-- Spiny Dogfish
-- Dover Sole
-- WA Copper Rockfish
-- OR Copper Rockfish
+Recruitment is classified into boom, bust, and average categories for the purposes of visualization. These categories were produced by classifying any year with recruitment > 1 SD above the long-term mean a "boom" recruitment event, any year with recruitment < 1 SD below the long-term mean a "bust" recruitment event, and all years within 1 SD of the long-term mean an "average" year. 
 
 
 ```{r define_plot_function}
@@ -322,6 +279,17 @@ plot_recr_cat(data = vermilion_rf_wa,
 acf(vermilion_rf_wa$Value)
 ```
 
+### Yelloweye Rockfish (2025 assessment)
+
+```{r}
+plot_recr_cat(data = yelloweye_rf,
+             stock_name = "Yelloweye Rockfish")
+
+# plot acf
+acf(yelloweye_rf$Value)
+```
+
+
 ### Yellowtail Rockfish (2025 assessment)
 
 ```{r}
@@ -357,6 +325,7 @@ vermilion_rf_sca_multimodality_test <- dip.test(vermilion_rf_sca$Value)
 vermilion_rf_nca_multimodality_test <- dip.test(vermilion_rf_nca$Value)
 vermilion_rf_or_multimodality_test <- dip.test(vermilion_rf_or$Value)
 vermilion_rf_wa_multimodality_test <- dip.test(vermilion_rf_wa$Value)
+yelloweye_rf_multimodality_test <- dip.test(yelloweye_rf$Value)
 yellowtail_rf_multimodality_test <- dip.test(yellowtail_rf$Value)
 
 # summarize this in a table
@@ -380,6 +349,7 @@ diptest_table <- data.frame(
                             "Vermilion & Sunset Rockfish - Northern CA",
                             "Vermilion Rockfish - Oregon",
                             "Vermilion Rockfish - Washington",
+                            "Yelloweye Rockfish",
                             "Yellowtail Rockfish"),
              dip.test.p.value = c(black_rf_nca_multimodality_test$p.value,
 black_rf_cca_multimodality_test$p.value,
@@ -400,6 +370,7 @@ vermilion_rf_sca_multimodality_test$p.value,
 vermilion_rf_nca_multimodality_test$p.value,
 vermilion_rf_or_multimodality_test$p.value,
 vermilion_rf_wa_multimodality_test$p.value,
+yelloweye_rf_multimodality_test$p.value,
 yellowtail_rf_multimodality_test$p.value))
 
 diptest_table %>% 
@@ -562,6 +533,13 @@ fit_plot_mixture(data = vermilion_rf_or,
 ```{r}
 fit_plot_mixture(data = vermilion_rf_wa,
              stock_name = "Vermilion Rockfish - Washington")
+```
+
+### Yelloweye Rockfish (2025 assessment)
+
+```{r}
+fit_plot_mixture(data = yelloweye_rf,
+             stock_name = "Yelloweye Rockfish")
 ```
 
 ### Yellowtail Rockfish (2025 assessment)

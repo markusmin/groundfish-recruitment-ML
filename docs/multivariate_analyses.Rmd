@@ -308,6 +308,14 @@ plot_PCA_recruitment(data = vermilion_rf_wa,
              stock_name = "Vermilion Rockfish - Washington")
 ```
 
+### Yelloweye Rockfish (2025 assessment)
+
+```{r}
+plot_PCA_recruitment(data = yelloweye_rf,
+             stock_name = "Yelloweye Rockfish")
+```
+
+
 ### Yellowtail Rockfish (2025 assessment)
 
 ```{r}

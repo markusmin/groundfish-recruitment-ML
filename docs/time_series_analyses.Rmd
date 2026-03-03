@@ -34,8 +34,9 @@ mutate(dplyr::select(black_rf_nca_cat_rec, Yr, Value, one_sd_boom_bust), stock =
     bind_rows(mutate(dplyr::select(vermilion_rf_or_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Vermilion Rockfish (OR)")) %>% 
     bind_rows(mutate(dplyr::select(vermilion_rf_wa_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Vermilion Rockfish (WA)")) %>% 
     bind_rows(mutate(dplyr::select(quillback_rf_ca_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Quillback Rockfish")) %>% 
-      bind_rows(mutate(dplyr::select(sablefish_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Sablefish")) %>% 
+    bind_rows(mutate(dplyr::select(sablefish_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Sablefish")) %>% 
     bind_rows(mutate(dplyr::select(rougheye_rf_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Rougheye/Blackspotted Rockfish")) %>% 
+    bind_rows(mutate(dplyr::select(yelloweye_rf_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Yelloweye Rockfish"))
     bind_rows(mutate(dplyr::select(yellowtail_rf_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Yellowtail Rockfish")) -> recdevs_all_long
 ```
 

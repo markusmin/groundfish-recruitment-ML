@@ -4,6 +4,8 @@ author: "Markus Min"
 date: "`r Sys.Date()`"
 output:
   html_document
+bibliography: recruitment-ML.bib
+csl: ecology.csl
 ---
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
@@ -12,20 +14,10 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 
 ## Predictor variables
 
-The choice of predictor variables, and how those predictor variables are processed to serve as feature variables for subsequent analyses, is the first step in this analysis. Furthermore, a core trade-off for recruitment analyses is the trade-off between predictor data availability and time series length. Predictor variables available for this analysis fall into three main categories:
-
-1. Oceanographic model outputs
-2. Biological time series
-3. Oceanographic/ecosystem indicators
-
-**Oceanographic model outputs**: There are two main oceanographic models that are used for marine ecosystem purposes on the west coast: The (UCSC ROMS model)[https://www.cencoos.org/observations/models-forecasts/] [@Neveu2016] and the recently published (MOM6 model)[https://psl.noaa.gov/cefi_portal/] [@Drenkard2024]. The UCSC ROMS model extends from 1980-2022, and is the model that has been used for numerous recruitment studies on the west coast, including @Ward2024, which explored different approaches for forecasting groundfish recruitment. However, this model is not being consistently updated, and consists of multiple oceanographic models stitched together (specifically, a 1980-2010 re-analysis, and a 2011-2022 near-real-time model). The MOM6 model is a recently published model that  NOAA CEFI (Changing Ecosystems and Fisheries Initiative) developed for marine resource applications throughout the Northeast Pacific. This model contains both a hindcast (back to 1993) and short- and medium-term forecasts, making it much more useful for forecasting. Recent papers on forecasting recruitment specifically for management purposes have used this model for this reason [@Feddern2026]. However, because of the longer available time series and the focus of this study on ecological mechanisms over forecasting, **I will start with the ROMS outputs as predictor variables.** Oceanographic covariates were derived from a data assimilative configuration of the Regional Ocean Modeling System (ROMS) with 0.1 ̊ (~10 km) horizontal resolution and 42 terrain-following vertical levels (oceanmodeling.ucsc.edu).
-
-**Biological time series**: There are two types of biological time series that could be relevant for predicting recruitment: indices of lower trophic level productivity, and indices of larval/juvenile abundance of the target stock. Lower trophic level productivity can be captured by metrics such as chl-a or time series such as copepods from the NHL (1996-present). In the case of larval/juvenile abundance indices, surveys such as the Rockfish Recruitment and Ecosystem Assessment Survey (RREAS, 1983-present) or CalCOFI (reliable 1985-present) provide indices of pelagic larvae/YOY, while the West Coast Groundfish Bottom Trawl Survey contains data on age-0, age-1, and/or age-2 individuals of certain species. For example, sablefish typically are seen at age-0, Dover Sole are seen at age-1 and age-2, and longspine and shortspine thornyhead are seen at small sizes (a lack of validated aging method precludes aging these small fish). This data could be used as an additional predictor variable, or as a response variable as an index of recruitment.
-
-**Oceanographic/ecosystem indicators**: Many indicators of climate and ocean drivers exist. However, many indicators that have been used in past studies, such as PDO, NPGO, or ENSO, have shown non-stationarity in their relationships with ecosystem conditions. Therefore, I will not be using basin-scale indicators, especially given that data from which these indices are derived (SST and SSH) are available at a fine spatial scale for our spatial domain of interest. Other indicators, such as the spring transition index at different latitudes, may capture key aspects of seasonality for recruitment dynamics.
+The predictor variables used in this analysis are outputs from the (UCSC ROMS model)[https://www.cencoos.org/observations/models-forecasts/] [@Neveu2016. The UCSC ROMS model extends from 1980-2022, and is the model that has been used for numerous recruitment studies on the west coast, including @Ward2024, which explored different approaches for forecasting groundfish recruitment. However, this model is not being consistently updated, and consists of multiple oceanographic models stitched together (specifically, a 1980-2010 re-analysis, and a 2011-2022 near-real-time model). 
 
 
-### Initial suite of predictor variables
+## Initial suite of predictor variables
 
 #### ROMS: Sea surface temperature (SST)
 
@@ -52,30 +44,23 @@ CUTI provides estimates of vertical transport near the coast (i.e., upwelling/do
 BEUTI provides estimates of vertical nitrate flux near the coast (i.e., the amount of nitrate upwelled/downwelled), which may be more relevant than upwelling strength when considering some biological responses. This index is available in one-degree latitudinal bands along the U.S. West Coast.
 
 
-#### Spawning stock biomass (SSB)
+## Processing ROMS outputs
 
-The relationship between SSB and recruitment in west coast groundfishes is limited. However, there may be ecological processes that govern when spawning output is related to recruitment, and when it is not. Therefore, SSB could be an interesting predictor variable for recruitment.
+While the two upwelling indices, CUTI and BEUTI, are summarized by biogeographic provinces of the California Current, the other variables (SSH, SST, BV, and ILD) are composed of monthly spatial fields and a 10 km grid cell resolution. For this preliminary analysis, a PCA was run on these fields, subset to within 100 km of the coast, and significant predictors according to Horn's parallel analysis test extracted.
 
+The time series of these significant principal components are visualized below:
 
-## Processing predictor variables
+![Significant principal components from the SSH, SST, ILD, and BV spatial fields from ROMS.](../figures/feature_extraction/features_ts_plot.png)
 
-### Spatiotemporal oceanographic data
+The loadings of the spatial fields on the principal components are visualized below:
 
+![Loadings of the spatial fields on the principal components of BV.](../figures/feature_extraction/bbv_eof_loadings_plot.png)
 
+![Loadings of the spatial fields on the principal components of ILD.](../figures/feature_extraction/ild_eof_loadings_plot.png)
 
-### Option 1: A priori hypotheses and summarization
+![Loadings of the spatial fields on the principal components of SSH.](../figures/feature_extraction/ssh_eof_loadings_plot.png)
 
-One approach would be to take the approach that has been recently been used for West Coast groundfishes in @Tolimieri2018, @Haltuch2020, @Vestfals2023, and @Feddern2026 in which regional oceanographic modeling outputs are summarized according to a priori hypotheses about mechanistic drivers of recruitment. For example, as seen in Table 1 from Vestfals et al. 2023, different covariates are summarized over different time periods and spatial extents to match hypotheses of interest.
+![Loadings of the spatial fields on the principal components of SST.](../figures/feature_extraction/sst_eof_loadings_plot.png)
 
-
-![Table 1 from Vestfals et al. 2023.](Vestfals_2023_Table1.png)
-
-### Option 2: Feature extraction from oceanographic models
-
-@Kuhn2021 present a workflow in which self-organizing maps (SOM) or empirical orthogonal functions (EOF) are used to extract features from spatiotemporal data on variables such as SST or salinity, and these features are then used to predict recruitment in a machine learning framework. When feature selection is conducted in the same framework as the ML model, this allows features to be extracted that are most meaningful to the response variable of interest. There are some similarities between this approach and oceanographic indices like PDO, which are also conducted using EOF. However, the benefit of this approach is that the EOF or SOM analysis can be performed on a region of the ocean that aligns with the stock's distribution and therefore is more biologically relevant.
-
-
-### Option 3: Near-real-time oceanographic indicators
-
-The main drawbacks for the oceanographic model outputs is that 1) the models are not updated regularly and 2) have only been run for certain years. This makes them less useful for forecasting and reduces the time series that is available for statistical analysis. As such, indicators such as those maintained by the CCIEA present a tradeoff with the outputs from oceanographic models.
+## References
 

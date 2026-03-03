@@ -43,6 +43,7 @@ vermilion_rf_or_cat_rec <- read.csv(here::here("ML_inputs", "recruitment_data", 
 vermilion_rf_wa_cat_rec <- read.csv(here::here("ML_inputs", "recruitment_data", "vermilion_rf_wa_recdevs.csv"))
 quillback_rf_ca_cat_rec <- read.csv(here::here("ML_inputs", "recruitment_data", "quillback_rf_ca_recdevs.csv"))
 rougheye_rf_cat_rec <- read.csv(here::here("ML_inputs", "recruitment_data", "rougheye_rf_recdevs.csv"))
+yelloweye_rf_cat_rec <- read.csv(here::here("ML_inputs", "recruitment_data", "yelloweye_rf_recdevs.csv"))
 yellowtail_rf_cat_rec <- read.csv(here::here("ML_inputs", "recruitment_data", "yellowtail_rf_recdevs.csv"))
 
 # join features with recruitment data
@@ -73,4 +74,5 @@ join_features_recdevs(vermilion_rf_or_cat_rec) -> vermilion_rf_or
 join_features_recdevs(vermilion_rf_wa_cat_rec) -> vermilion_rf_wa
 join_features_recdevs(quillback_rf_ca_cat_rec) -> quillback_rf_ca
 join_features_recdevs(rougheye_rf_cat_rec) -> rougheye_rf
+join_features_recdevs(yelloweye_rf_cat_rec) -> yelloweye_rf
 join_features_recdevs(yellowtail_rf_cat_rec) -> yellowtail_rf
