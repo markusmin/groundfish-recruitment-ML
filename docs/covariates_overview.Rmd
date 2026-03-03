@@ -46,21 +46,31 @@ BEUTI provides estimates of vertical nitrate flux near the coast (i.e., the amou
 
 ## Processing ROMS outputs
 
-While the two upwelling indices, CUTI and BEUTI, are summarized by biogeographic provinces of the California Current, the other variables (SSH, SST, BV, and ILD) are composed of monthly spatial fields and a 10 km grid cell resolution. For this preliminary analysis, a PCA was run on these fields, subset to within 100 km of the coast, and significant predictors according to Horn's parallel analysis test extracted.
+While the two upwelling indices, CUTI and BEUTI, are averaged across the three biogeographic provinces of the California Current (North/Central/South), the other variables (SSH, SST, BV, and ILD) are composed of monthly spatial fields at a 10 km grid cell resolution. For this preliminary analysis, a PCA was run on these fields, subset to within 100 km of the coast, and significant predictors according to Horn's parallel analysis test extracted.
 
 The time series of these significant principal components are visualized below:
 
 ![Significant principal components from the SSH, SST, ILD, and BV spatial fields from ROMS.](../figures/feature_extraction/features_ts_plot.png)
 
+<br>
+
 The loadings of the spatial fields on the principal components are visualized below:
 
 ![Loadings of the spatial fields on the principal components of BV.](../figures/feature_extraction/bbv_eof_loadings_plot.png)
 
+<br>
+
 ![Loadings of the spatial fields on the principal components of ILD.](../figures/feature_extraction/ild_eof_loadings_plot.png)
+
+<br>
 
 ![Loadings of the spatial fields on the principal components of SSH.](../figures/feature_extraction/ssh_eof_loadings_plot.png)
 
+<br>
+
 ![Loadings of the spatial fields on the principal components of SST.](../figures/feature_extraction/sst_eof_loadings_plot.png)
+
+<br>
 
 ## References
 

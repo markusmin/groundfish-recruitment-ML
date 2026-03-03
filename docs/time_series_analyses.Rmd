@@ -5,6 +5,9 @@ date: "`r Sys.Date()`"
 output:
   html_document
 ---
+
+First, the time series of recruitment for each stock is shown, using the boom/bust/average classification. Then, common boom/bust years are identified and visualized on the same PCA of the 14 predictor time series.
+
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.height = 8, fig.width = 8)
 ```
@@ -36,7 +39,7 @@ mutate(dplyr::select(black_rf_nca_cat_rec, Yr, Value, one_sd_boom_bust), stock =
     bind_rows(mutate(dplyr::select(quillback_rf_ca_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Quillback Rockfish")) %>% 
     bind_rows(mutate(dplyr::select(sablefish_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Sablefish")) %>% 
     bind_rows(mutate(dplyr::select(rougheye_rf_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Rougheye/Blackspotted Rockfish")) %>% 
-    bind_rows(mutate(dplyr::select(yelloweye_rf_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Yelloweye Rockfish"))
+    bind_rows(mutate(dplyr::select(yelloweye_rf_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Yelloweye Rockfish")) %>% 
     bind_rows(mutate(dplyr::select(yellowtail_rf_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Yellowtail Rockfish")) -> recdevs_all_long
 ```
 

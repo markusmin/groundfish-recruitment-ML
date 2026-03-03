@@ -55,6 +55,12 @@ These stocks did not have a sum to zero constraint:
 Recruitment is classified into boom, bust, and average categories for the purposes of visualization. These categories were produced by classifying any year with recruitment > 1 SD above the long-term mean a "boom" recruitment event, any year with recruitment < 1 SD below the long-term mean a "bust" recruitment event, and all years within 1 SD of the long-term mean an "average" year. 
 
 
+#### Autocorrelation
+
+Autocorrelation in each of the recruitment time series is also visualized below. While persistent oceanographic conditions can lead to autocorrelation in recruitment deviations, autocorrelation may also result from aging error, which will "smear" out recruitment deviations and cause consecutive years to have autocorrelated recruitment deviations when in reality it is likely the signal from only one of these years being "smeared" across multiple years. This is particularly apparent in long-lived species, such as Yelloweye Rockfish (see below).
+
+
+
 ```{r define_plot_function}
 plot_recr_cat <- function(data, stock_name){
   recr_cat_colors <- c("Bust" = "#762a83",
@@ -304,6 +310,9 @@ acf(yellowtail_rf$Value)
 
 ## Recruitment as a mixture
 
+To explore whether the boom/bust distribution of recruitment deviations might be better represented as a mixture, a two distribution mixture mdoel was fit to the recruitment deviations for each stock. Additionally, Hartigan's dip test was used to test if each distribution was significantly different from a unimodal distribution (spoiler alert, it was not for any stock).
+
+
 ```{r create_table}
 # step 1: use dip test to examine when multimodality is supported
 black_rf_nca_multimodality_test <- dip.test(black_rf_nca$Value)
@@ -465,7 +474,11 @@ fit_plot_mixture(data = lingcod_north,
 
 ### Lingcod - South of 40°10'N (2021 assessment)
 
-```{r}
+
+A mixture model could not be fit to this distribution.
+
+
+```{r, eval = FALSE}
 fit_plot_mixture(data = lingcod_south,
              stock_name = "Lingcod - South of 40°10'N")
 ```
