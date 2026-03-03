@@ -6,7 +6,7 @@ output:
   html_document
 ---
 
-A PCA was run on the tiem series of the 14 predictors (significant PCs of ILD, SSH, SST, and BV; BEUTI north, BEUTI central, CUTI north, CUTI central). None of these predictors had a Pearson's correlation coefficient of over 0.8 (although many were over 0.7). This PCA is then visualized using the boom/bust/average classification scheme for the recruitment data for each stock.
+A PCA was run on the tiem series of the 14 predictors (significant PCs of ILD, SSH, SST, and BV; BEUTI north, BEUTI central, CUTI north, CUTI central). None of these predictors had a pairwise Pearson's correlation coefficient of over 0.8 (although many were over 0.7). This PCA is then visualized using the boom/bust/average classification scheme for the recruitment data for each stock.
 
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.height = 12, fig.width = 8)
