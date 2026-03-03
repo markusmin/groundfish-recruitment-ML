@@ -7,3 +7,1115 @@ output:
 ---
 
 Coming soon!
+
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, eval = FALSE)
+```
+
+```{r load_data_functions}
+library(here)
+library(kableExtra)
+source(here::here("R", "functions", "load_reformat_data.R"))
+
+# get number of cores for parallelization
+cores <- parallel::detectCores()
+```
+
+```{r functions_block}
+# establish training/validation/testing splits
+split_training_testing_one_yr_ahead <- function(data) {
+  # drop all columns that aren't ID, features, or outcome
+  data %>%
+    dplyr::select(-c("one_sd_boom_bust", "Parm_StDev", "recr_scaled")) -> data
+  
+  # get first ten years
+  first_10_yrs <- (min(data$Yr):(min(data$Yr) + 9))
+  
+  # get last ten years
+  last_10_yrs <- (max(data$Yr) - 9):max(data$Yr)
+  
+  # First, we will split our data into training and testing data. The testing
+  # data is the last ten years of our dataset; the training data is the rest
+  
+  # Second, we will take our training data and use rolling_origin() to create folds
+  # within it; following the workflow of Allen Akselrud 2024, we will start with
+  # the first ten years as our first set of analysis data, and continue to predict
+  # one year ahead
+  
+  # Here, we are going to use essentially rolling LFO-CV twice: once for
+  
+  # create the resamples for ASSESSMENT from the TRAINING data
+  assessment_resamples <- rolling_origin(
+    subset(data, !(Yr %in% last_10_yrs)),
+    # don't include the testing data!
+    initial = 10,
+    # number of initial years
+    assess  = 1,
+    # predict 1 future year
+    cumulative = TRUE,
+    skip = 0
+  )
+  
+  # create the resamples for TESTING
+  testing_resamples <- rolling_origin(
+    data,
+    initial = nrow(subset(data, !(
+      Yr %in% last_10_yrs
+    ))),
+    # number of initial years
+    assess  = 1,
+    # predict 1 future year
+    cumulative = TRUE,
+    skip = 0
+  )
+  
+  # create a table that has the truth (Value) for the left out years
+  testing_resamples_df <- testing_resamples %>%
+    mutate(
+      assessment_data = map(splits, assessment),
+      .row = map_int(splits, ~ as.integer(assessment(.x)$Yr - min(data$Yr) + 1))
+    ) %>%
+    dplyr::select(id, assessment_data, .row) %>%
+    unnest(assessment_data) %>%
+    dplyr::select(id, Value, .row)
+  
+  return(
+    list(
+      assessment_resamples = assessment_resamples,
+      testing_resamples = testing_resamples,
+      testing_resamples_df = testing_resamples_df
+    )
+  )
+  
+}
+
+# fit a null model
+fit_null_model <- function(data, testing_resamples_df){
+  
+    # get first ten years
+  first_10_yrs <- (min(data$Yr):(min(data$Yr) + 9))
+  
+  # get last ten years
+  last_10_yrs <- (max(data$Yr) - 9):max(data$Yr)
+  
+  # Use same null model as Ward et al. 2024:
+  # The null model consisted of using the  historical mean preceding each holdout 
+  # point (equivalent to fitting  an intercept only model).
+  # this will be very close to assuming a recDev of zero, but not exactly
+  
+  # Calculate class proportions from training data
+  null_model_pred <- data.frame(Yr = last_10_yrs, .pred_Value = rep(NA, 10))
+  for (i in last_10_yrs){
+    pred_val <- mean(subset(data, !(Yr %in% i:max(data$Yr)))$Value)
+    null_model_pred[null_model_pred$Yr == i,]$.pred_Value <- pred_val
+  }
+  
+  # Construct a null prediction tibble using training proportions
+  null_model_pred <- cbind(testing_resamples_df, null_model_pred)
+  
+  # Calculate null RMSE + rsq
+  null_model_pred %>%
+    rmse(truth = Value,
+                .pred_Value) %>% 
+    mutate(model = "null") -> null_rmse
+  
+  null_model_pred %>%
+    rsq(truth = Value,
+        .pred_Value) %>% 
+    mutate(model = "null") -> null_rsq
+  
+  # start a table to compare models with the null metrics table
+  null_metrics <- bind_rows(null_rmse, null_rsq)
+  
+  return(null_metrics)
+}
+
+## Function to fit a lm model for a given set of predictors
+fit_one_lm_lfo <- function(data, pred_set, resamples){
+  
+  # get first ten years
+  first_10_yrs <- (min(data$Yr):(min(data$Yr) + 9))
+  
+  # get last ten years
+  last_10_yrs <- (max(data$Yr) - 9):max(data$Yr)
+  
+  # Build the formula
+  lm_f <- as.formula(paste0("Value ~ ", paste(pred_set[[1]], collapse = " + ")))
+  
+  # Set up the model
+  lm_mod <- linear_reg() %>% 
+    set_engine("lm")
+  
+  # Set up the recipe
+  lm_recipe <- recipe(lm_f, data = subset(data, !(Yr %in% last_10_yrs)))
+
+  # package these together into a workflow for the model
+  workflow() %>%
+    add_model(lm_mod) %>% 
+    add_recipe(lm_recipe)  -> lm_workflow
+  
+  # Fit and evaluate using LFO-CV
+  # note that this is unable to compute rsq on a single left-out value,
+  # so we will calculate our metrics after the function is run
+  fit_resamples(
+    lm_workflow,
+    resamples = resamples,
+    metrics = metric_set(rmse),
+    control = control_resamples(save_pred = TRUE)
+  ) -> lm_res
+  
+  return(lm_res)
+}
+
+# fit a multiple linear regression
+fit_lm <- function(data, assessment_resamples){
+  # get first ten years
+  first_10_yrs <- (min(data$Yr):(min(data$Yr) + 9))
+  
+  # get last ten years
+  last_10_yrs <- (max(data$Yr) - 9):max(data$Yr)
+  
+  #### Fit multiple linear regression ####
+  # drop all columns that aren't ID, features, or outcome
+  data %>%
+    dplyr::select(-c("one_sd_boom_bust", "Parm_StDev", "recr_scaled")) -> data
+  
+  ### Generate all possible combinations of 1, 2, and 3 predictors
+  
+  predictors <- colnames(dplyr::select(data, -c("Yr", "Value")))
+  
+  # use the map function
+  predictor_combos <- bind_rows(map(1:3, ~ combn(predictors, .x, simplify = FALSE) %>% 
+    map(~ tibble(predictors = list(.x))))
+  ) %>% 
+    mutate(model_id = row_number())
+
+  # Fit all models
+  predictor_combos %>%
+    mutate(lfo_cv_fit = map(predictors, \(x) fit_one_lm_lfo(data, x, assessment_resamples))) -> lm_results
+    # mutate(lfo_cv_fit = map(predictor_combos$predictors, ~fit_one_lm_lfo(.x, assessment_resamples))) -> lm_results
+  
+  lm_results %>% 
+    mutate(
+      # RMSE from fold-level evaluation (already computed per fold)
+      # this is calculated as an average for each held out year
+      rmse = map_dbl(lfo_cv_fit, ~ collect_metrics(.x) %>% 
+                       filter(.metric == "rmse") %>% 
+                       pull(mean)),
+      # rsq computed across all pooled held-out predictions
+      # this is calculated
+      rsq = map_dbl(lfo_cv_fit, ~ collect_predictions(.x) %>% 
+                      rsq(truth = Value, estimate = .pred) %>% 
+                      pull(.estimate)),
+      n_predictors = map_int(predictors, length),
+      predictor_names = map_chr(predictors, ~ paste(.x, collapse = " + "))
+    ) %>% 
+    dplyr::select(model_id, n_predictors, predictor_names, rmse, rsq) -> lm_metrics
+  
+  # extract the best model based on RMSE
+  lm_metrics %>% 
+    arrange(rmse) %>% 
+    head(1) -> best_fit_lm
+  
+  ### The last fit - fit the best model to combined training + validation data, evaluate on testing
+  
+  # Build the last
+  lm_last_f <- as.formula(paste0("Value ~ ", paste(best_fit_lm$predictor_names, collapse = " + ")))
+  
+  # the last recipe
+  lm_last_recipe <- recipe(lm_last_f, data = data)
+  
+  # the last workflow
+  # update the recipe with the new formula
+  lm_mod <- linear_reg() %>% 
+    set_engine("lm")
+    
+  workflow() %>%
+    add_model(lm_mod) %>% 
+    add_recipe(lm_last_recipe)  -> last_lm_workflow
+  
+  # the last fit
+  # first, we need to make a split that has all training data and all testing data separated
+  data_split <- make_splits(x = list(analysis = 1:(nrow(data)-10),
+                                          assessment = (nrow(data)-9):nrow(data)),
+                                 data = data)
+  last_lm_fit <- last_lm_workflow %>% 
+    last_fit(data_split)
+  
+  # evaluate performance
+  last_lm_fit %>% 
+    collect_metrics() %>% 
+    mutate(model = paste0("lm(", deparse(lm_last_f), ")")) %>%
+    dplyr::select(-.config) -> last_lm_fit_metrics
+  
+  return(last_lm_fit_metrics)
+
+}
+
+## Function to fit a gam model for a given set of predictors
+fit_one_gam_lfo <- function(data, pred_set, resamples){
+  # get first ten years
+  first_10_yrs <- (min(data$Yr):(min(data$Yr) + 9))
+  
+  # get last ten years
+  last_10_yrs <- (max(data$Yr) - 9):max(data$Yr)
+  
+  # Build the formulas - two in this case for GAMs
+  gam_f_splines <- as.formula(paste0("Value ~ ", paste("s(", pred_set[[1]], ", k = 3)", collapse = " + ")))
+  
+  gam_f <- as.formula(paste0("Value ~ ", paste(pred_set[[1]], collapse = " + ")))
+
+  # Set up the model
+  gam_mod <- gen_additive_mod() %>% 
+    set_engine("mgcv", num.threads = cores) %>% 
+    set_mode("regression")
+  
+  # package these together into a workflow for the model
+  workflow() %>%
+    add_model(gam_mod, formula = gam_f_splines) %>% 
+    add_formula(gam_f) %>% 
+    fit(data = subset(data, !(Yr %in% last_10_yrs)))  -> gam_workflow
+  
+  # Fit and evaluate using LFO-CV
+  # note that this is unable to compute rsq on a single left-out value,
+  # so we will calculate our metrics after the function is run
+  fit_resamples(
+    gam_workflow,
+    resamples = resamples,
+    metrics = metric_set(rmse),
+    control = control_resamples(save_pred = TRUE)
+  ) -> gam_res
+  
+  return(gam_res)
+}
+
+# fit a GAM
+fit_gam <- function(data, assessment_resamples){
+  # get first ten years
+  first_10_yrs <- (min(data$Yr):(min(data$Yr) + 9))
+  
+  # get last ten years
+  last_10_yrs <- (max(data$Yr) - 9):max(data$Yr)
+  
+  # drop all columns that aren't ID, features, or outcome
+  data %>%
+    dplyr::select(-c("one_sd_boom_bust", "Parm_StDev", "recr_scaled")) -> data
+  
+  ### Generate all possible combinations of 1, 2, and 3 predictors
+  
+  predictors <- colnames(dplyr::select(data, -c("Yr", "Value")))
+  
+  # use the map function
+  predictor_combos <- bind_rows(map(1:3, ~ combn(predictors, .x, simplify = FALSE) %>%
+    map(~ tibble(predictors = list(.x))))
+  ) %>%
+    mutate(model_id = row_number())
+
+  # Fit all models
+  predictor_combos %>%
+  mutate(lfo_cv_fit = map(predictors, \(x) fit_one_gam_lfo(data, x, assessment_resamples))) -> gam_results
+  
+  gam_results %>% 
+  mutate(
+    # RMSE from fold-level evaluation (already computed per fold)
+    # this is calculated as an average for each held out year
+    rmse = map_dbl(lfo_cv_fit, ~ collect_metrics(.x) %>% 
+                     filter(.metric == "rmse") %>% 
+                     pull(mean)),
+    # rsq computed across all pooled held-out predictions
+    # this is calculated
+    rsq = map_dbl(lfo_cv_fit, ~ collect_predictions(.x) %>% 
+                    rsq(truth = Value, estimate = .pred) %>% 
+                    pull(.estimate)),
+    n_predictors = map_int(predictors, length),
+    predictor_names = map_chr(predictors, ~ paste(.x, collapse = " + "))
+  ) %>% 
+  dplyr::select(model_id, n_predictors, predictor_names, rmse, rsq) -> gam_metrics
+  
+  # extract the best model based on RMSE
+  gam_metrics %>% 
+  arrange(rmse) %>% 
+  head(1) -> best_fit_gam
+  
+  ### The last fit - fit the best model to combined training + validation data, evaluate on testing
+  
+  # Build the last model
+  gam_last_f_splines <- as.formula(paste0("Value ~ ", paste("s(", best_fit_gam$predictor_names, ", k = 3)", collapse = " + ")))
+  gam_last_f <- as.formula(paste0("Value ~ ", paste(best_fit_gam$predictor_names, collapse = " + ")))
+  
+  
+  # the last workflow
+  # update the workflow with the new formula
+  # Set up the model
+  gam_mod <- gen_additive_mod() %>% 
+    set_engine("mgcv", num.threads = cores) %>% 
+    set_mode("regression")
+  
+  workflow() %>%
+    add_model(gam_mod, formula = gam_last_f_splines) %>% 
+    add_formula(gam_last_f) -> last_gam_workflow
+  
+  
+  # the last fit
+  # first, we need to make a split that has all training data and all testing data separated
+  data_split <- make_splits(x = list(analysis = 1:(nrow(data)-10),
+                                        assessment = (nrow(data)-9):nrow(data)),
+                               data = data)
+  last_gam_fit <- last_gam_workflow %>% 
+  last_fit(data_split)
+  
+  # evaluate performance
+  last_gam_fit %>% 
+  collect_metrics() %>% 
+  mutate(model = paste0("gam(", deparse(gam_last_f), ")")) %>%
+  dplyr::select(-.config) -> last_gam_fit_metrics
+  
+  return(last_gam_fit_metrics)
+  
+}
+
+# tune + fit a rf
+fit_rf <- function(data, assessment_resamples){
+  # get first ten years
+  first_10_yrs <- (min(data$Yr):(min(data$Yr) + 9))
+  
+  # get last ten years
+  last_10_yrs <- (max(data$Yr) - 9):max(data$Yr)
+  
+    # drop all columns that aren't ID, features, or outcome
+  data %>%
+    dplyr::select(-c("one_sd_boom_bust", "Parm_StDev", "recr_scaled")) -> data
+  
+  # set up the model
+  rf_mod <- 
+    rand_forest(mtry = tune(), min_n = tune(), trees = tune()) %>% 
+    set_engine("ranger", num.threads = cores) %>% 
+    set_mode("regression")
+  
+  # set up the recipe - formula + code columns
+  rf_recipe <- recipe(Value ~., data = subset(data, !(Yr %in% last_10_yrs))) %>% 
+    update_role(Yr, new_role = "ID")
+  
+  # package these together into a workflow for the model,
+  workflow() %>%
+    add_model(rf_mod) %>% 
+    add_recipe(rf_recipe)  -> rf_workflow
+  
+  rf_grid <- grid_regular(
+    mtry(range = c(2, 10)),        # can't exceed number of predictors
+    min_n(range = c(2, 10)), # keep well below number of training rows
+    trees(range = c(500, 2500)),
+    # levels = c(5, 5, 25) # try more trees than mtry or min_n - takes forever
+    levels = c(5, 5, 5)
+  )
+  
+  # tune the hyperparameters on the assessment resamples
+  rf_res <- 
+    rf_workflow %>% 
+    tune_grid(assessment_resamples,
+              grid = rf_grid,
+              control = control_grid(save_pred = TRUE),
+              metrics = metric_set(rmse))
+  
+  # select the best model according to RMSE
+  rf_best <- rf_res %>% 
+    select_best(metric = "rmse")
+  
+  autoplot(rf_res)
+  
+  # evaluate model on the held-out testing data and store rmse
+  ### The last fit - fit the best model to combined training + validation data, evaluate on testing
+  
+  # the last model
+  last_rf_mod <- rand_forest(mtry = rf_best$mtry, min_n = rf_best$min_n, trees = rf_best$trees) %>% 
+    set_engine("ranger", num.threads = cores, importance = "impurity") %>% 
+    set_mode("regression")
+  
+  # the last workflow
+  last_rf_workflow <- 
+    rf_workflow %>% 
+    update_model(last_rf_mod)
+  
+  # the last fit
+  # first, we need to make a split that has all training data and all testing data separated
+  data_split <- make_splits(x = list(analysis = 1:(nrow(data)-10),
+                                          assessment = (nrow(data)-9):nrow(data)),
+                                 data = data)
+  last_rf_fit <- last_rf_workflow %>% 
+    last_fit(data_split)
+  
+  # evaluate performance
+  last_rf_fit %>% 
+    collect_metrics() %>% 
+    mutate(model = "random forest") %>% 
+    dplyr::select(-.config) -> last_rf_fit_metrics
+  
+  return(last_rf_fit_metrics)
+}
+
+
+## Function to fit a nn model for a given set of predictors
+fit_one_nn_lfo <- function(data, pred_set, resamples){
+  first_10_yrs <- (min(data$Yr):(min(data$Yr) + 9))
+  
+  # get last ten years
+  last_10_yrs <- (max(data$Yr) - 9):max(data$Yr)
+  
+  # Build the formula
+  nn_f <- as.formula(paste0("Value ~ ", paste(pred_set[[1]], collapse = " + ")))
+  
+  # Set up the recipe
+  nn_recipe <- recipe(nn_f, data = subset(data, !(Yr %in% last_10_yrs)))
+  
+  # set model specifications
+  nn_spec <- # mlp(epochs = 100, hidden_units = 2, penalty = 0.01, learn_rate = 0.1) %>% 
+    mlp(epochs = 50, penalty = 0, hidden_units = 3) %>% 
+    # set_engine("brulee", validation = 0) %>% 
+    set_engine("nnet") %>% 
+    set_mode("regression")
+  
+  # set up the workflow
+  nn_workflow <- nn_recipe %>% 
+    workflow(nn_spec)
+  
+  # Fit and evaluate using LFO-CV
+  # note that this is unable to compute rsq on a single left-out value,
+  # so we will calculate our metrics after the function is run
+  # mlp_reg_fit <- nn_spec |> fit(nn_f, data = subset(data, !(Yr %in% last_10_yrs)))
+  # 3-3-1 network with 26 weights
+  
+  fit_resamples(
+    nn_workflow,
+    resamples = resamples,
+    metrics = metric_set(rmse),
+    control = control_resamples(save_pred = TRUE)
+  ) -> nn_res
+  
+  return(nn_res)
+}
+
+# tune + fit a neural network
+fit_nn <- function(data, assessment_resamples){
+  # get first ten years
+  first_10_yrs <- (min(data$Yr):(min(data$Yr) + 9))
+  
+  # get last ten years
+  last_10_yrs <- (max(data$Yr) - 9):max(data$Yr)
+  
+  # drop all columns that aren't ID, features, or outcome
+  data %>%
+    dplyr::select(-c("one_sd_boom_bust", "Parm_StDev", "recr_scaled")) -> data
+  
+    ### Generate all possible combinations of 1, 2, and 3 predictors
+  
+  predictors <- colnames(dplyr::select(data, -c("Yr", "Value")))
+  
+  # create combinations of 3 for initial testing
+  NN_predictor_combos <- bind_rows(map(3, ~ combn(predictors, .x, simplify = FALSE) %>% 
+                                         map(~ tibble(predictors = list(.x))))
+  ) %>% 
+    mutate(model_id = row_number())
+  
+  
+  # Fit all models
+  NN_predictor_combos %>%
+    mutate(lfo_cv_fit = map(predictors, \(x) fit_one_nn_lfo(data, x, assessment_resamples))) -> nn_results
+
+  
+  nn_results %>% 
+    mutate(
+      # RMSE from fold-level evaluation (already computed per fold)
+      # this is calculated as an average for each held out year
+      rmse = map_dbl(lfo_cv_fit, ~ collect_metrics(.x) %>% 
+                       filter(.metric == "rmse") %>% 
+                       pull(mean)),
+      # rsq computed across all pooled held-out predictions
+      # this is calculated
+      rsq = map_dbl(lfo_cv_fit, ~ collect_predictions(.x) %>% 
+                      rsq(truth = Value, estimate = .pred) %>% 
+                      pull(.estimate)),
+      n_predictors = map_int(predictors, length),
+      predictor_names = map_chr(predictors, ~ paste(.x, collapse = " + "))
+    ) %>% 
+    dplyr::select(model_id, n_predictors, predictor_names, rmse, rsq) -> nn_metrics
+  
+  # extract the best model based on RMSE
+  nn_metrics %>% 
+    arrange(rmse) %>% 
+    head(1) -> best_fit_nn
+  
+  ### The last fit - fit the best model to combined training + validation data, evaluate on testing
+  
+  # Build the last
+  nn_last_f <- as.formula(paste0("Value ~ ", paste(best_fit_nn$predictor_names, collapse = " + ")))
+  
+  # the last recipe
+  nn_last_recipe <- recipe(nn_last_f, data = data)
+  
+  # the last workflow
+  nn_spec <- # mlp(epochs = 100, hidden_units = 2, penalty = 0.01, learn_rate = 0.1) %>% 
+    mlp(epochs = 50, penalty = 0, hidden_units = 3) %>% 
+    # set_engine("brulee", validation = 0) %>% 
+    set_engine("nnet") %>% 
+    set_mode("regression")
+  
+  nn_workflow <- nn_recipe %>% 
+    workflow(nn_spec)
+  
+  last_nn_workflow <- 
+    nn_workflow %>% 
+    update_recipe(nn_last_recipe)
+  
+  # the last fit
+  # first, we need to make a split that has all training data and all testing data separated
+  data_split <- make_splits(x = list(analysis = 1:(nrow(data)-10),
+                                          assessment = (nrow(data)-9):nrow(data)),
+                                 data = data)
+  last_nn_fit <- last_nn_workflow %>% 
+    last_fit(data_split)
+  
+  # evaluate performance
+  last_nn_fit %>% 
+    collect_metrics() %>% 
+    mutate(model = paste0("nn(", deparse(nn_last_f), ")")) %>%
+    dplyr::select(-.config) -> last_nn_fit_metrics
+  
+  return(last_nn_fit_metrics)
+  
+}
+
+```
+
+
+## One-Year-Ahead Predictive Performance {.tabset .tabset-pills}
+
+### Black Rockfish - Northern CA (2023 assessment)
+
+```{r black_rf_nca_ml, cache = TRUE}
+black_rf_nca_splits <- split_training_testing_one_yr_ahead(data = black_rf_nca)
+
+black_rf_nca_null_metrics <- fit_null_model(data = black_rf_nca, testing_resamples_df = black_rf_nca_splits$testing_resamples_df)
+
+black_rf_nca_lm_metrics <- fit_lm(data = black_rf_nca, assessment_resamples = black_rf_nca_splits$assessment_resamples)
+
+black_rf_nca_gam_metrics <- fit_gam(data = black_rf_nca, assessment_resamples = black_rf_nca_splits$assessment_resamples)
+
+black_rf_nca_rf_metrics <- fit_rf(data = black_rf_nca, assessment_resamples = black_rf_nca_splits$assessment_resamples)
+
+black_rf_nca_nn_metrics <- fit_nn(data = black_rf_nca, assessment_resamples = black_rf_nca_splits$assessment_resamples)
+
+black_rf_nca_model_comparison_table <- bind_rows(black_rf_nca_null_metrics,
+                                              black_rf_nca_lm_metrics,
+                                              black_rf_nca_gam_metrics,
+                                              black_rf_nca_rf_metrics,
+                                              black_rf_nca_nn_metrics)
+
+black_rf_nca_model_comparison_table %>% 
+  kbl(caption = "One-year-ahead predictive performance for Black Rockfish (Northern CA).") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+
+### Black Rockfish - Central CA (2023 assessment)
+
+```{r black_rf_cca_ml, cache = TRUE}
+black_rf_cca_splits <- split_training_testing_one_yr_ahead(data = black_rf_cca)
+
+black_rf_cca_null_metrics <- fit_null_model(data = black_rf_cca, testing_resamples_df = black_rf_cca_splits$testing_resamples_df)
+
+black_rf_cca_lm_metrics <- fit_lm(data = black_rf_cca, assessment_resamples = black_rf_cca_splits$assessment_resamples)
+
+black_rf_cca_gam_metrics <- fit_gam(data = black_rf_cca, assessment_resamples = black_rf_cca_splits$assessment_resamples)
+
+black_rf_cca_rf_metrics <- fit_rf(data = black_rf_cca, assessment_resamples = black_rf_cca_splits$assessment_resamples)
+
+black_rf_cca_nn_metrics <- fit_nn(data = black_rf_cca, assessment_resamples = black_rf_cca_splits$assessment_resamples)
+
+black_rf_cca_model_comparison_table <- bind_rows(black_rf_cca_null_metrics,
+                                              black_rf_cca_lm_metrics,
+                                              black_rf_cca_gam_metrics,
+                                              black_rf_cca_rf_metrics,
+                                              black_rf_cca_nn_metrics)
+
+black_rf_cca_model_comparison_table %>% 
+  kbl(caption = "One-year-ahead predictive performance for Black Rockfish (Central CA).") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+
+### Black Rockfish - Oregon (2023 assessment)
+
+```{r black_rf_or_ml, cache = TRUE}
+black_rf_or_splits <- split_training_testing_one_yr_ahead(data = black_rf_or)
+
+black_rf_or_null_metrics <- fit_null_model(data = black_rf_or, testing_resamples_df = black_rf_or_splits$testing_resamples_df)
+
+black_rf_or_lm_metrics <- fit_lm(data = black_rf_or, assessment_resamples = black_rf_or_splits$assessment_resamples)
+
+black_rf_or_gam_metrics <- fit_gam(data = black_rf_or, assessment_resamples = black_rf_or_splits$assessment_resamples)
+
+black_rf_or_rf_metrics <- fit_rf(data = black_rf_or, assessment_resamples = black_rf_or_splits$assessment_resamples)
+
+black_rf_or_nn_metrics <- fit_nn(data = black_rf_or, assessment_resamples = black_rf_or_splits$assessment_resamples)
+
+black_rf_or_model_comparison_table <- bind_rows(black_rf_or_null_metrics,
+                                              black_rf_or_lm_metrics,
+                                              black_rf_or_gam_metrics,
+                                              black_rf_or_rf_metrics,
+                                              black_rf_or_nn_metrics)
+
+black_rf_or_model_comparison_table %>% 
+  kbl(caption = "One-year-ahead predictive performance for Black Rockfish (OR).") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+
+### Black Rockfish - Washington (2023 assessment)
+
+```{r black_rf_wa, cache = TRUE}
+black_rf_wa_splits <- split_training_testing_one_yr_ahead(data = black_rf_wa)
+
+black_rf_wa_null_metrics <- fit_null_model(data = black_rf_wa, testing_resamples_df = black_rf_wa_splits$testing_resamples_df)
+
+black_rf_wa_lm_metrics <- fit_lm(data = black_rf_wa, assessment_resamples = black_rf_wa_splits$assessment_resamples)
+
+black_rf_wa_gam_metrics <- fit_gam(data = black_rf_wa, assessment_resamples = black_rf_wa_splits$assessment_resamples)
+
+black_rf_wa_rf_metrics <- fit_rf(data = black_rf_wa, assessment_resamples = black_rf_wa_splits$assessment_resamples)
+
+black_rf_wa_nn_metrics <- fit_nn(data = black_rf_wa, assessment_resamples = black_rf_wa_splits$assessment_resamples)
+
+black_rf_wa_model_comparison_table <- bind_rows(black_rf_wa_null_metrics,
+                                              black_rf_wa_lm_metrics,
+                                              black_rf_wa_gam_metrics,
+                                              black_rf_wa_rf_metrics,
+                                              black_rf_wa_nn_metrics)
+
+black_rf_wa_model_comparison_table %>% 
+  kbl(caption = "One-year-ahead predictive performance for Black Rockfish (WA).") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+### Canary Rockfish (2023 assessment)
+
+```{r canary_rf_ml, cache = TRUE}
+canary_rf_splits <- split_training_testing_one_yr_ahead(data = canary_rf)
+
+canary_rf_null_metrics <- fit_null_model(data = canary_rf, testing_resamples_df = canary_rf_splits$testing_resamples_df)
+
+canary_rf_lm_metrics <- fit_lm(data = canary_rf, assessment_resamples = canary_rf_splits$assessment_resamples)
+
+canary_rf_gam_metrics <- fit_gam(data = canary_rf, assessment_resamples = canary_rf_splits$assessment_resamples)
+
+canary_rf_rf_metrics <- fit_rf(data = canary_rf, assessment_resamples = canary_rf_splits$assessment_resamples)
+
+canary_rf_nn_metrics <- fit_nn(data = canary_rf, assessment_resamples = canary_rf_splits$assessment_resamples)
+
+canary_rf_model_comparison_table <- bind_rows(canary_rf_null_metrics,
+                                              canary_rf_lm_metrics,
+                                              canary_rf_gam_metrics,
+                                              canary_rf_rf_metrics,
+                                              canary_rf_nn_metrics)
+
+canary_rf_model_comparison_table %>% 
+  kbl(caption = "One-year-ahead predictive performance for Canary Rockfish.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+### Copper Rockfish - CA, North of Point Conception (2023 assessment)
+
+```{r copper_rf_north_ml, cache = TRUE}
+copper_rf_north_splits <- split_training_testing_one_yr_ahead(data = copper_rf_north)
+
+copper_rf_north_null_metrics <- fit_null_model(data = copper_rf_north, testing_resamples_df = copper_rf_north_splits$testing_resamples_df)
+
+copper_rf_north_lm_metrics <- fit_lm(data = copper_rf_north, assessment_resamples = copper_rf_north_splits$assessment_resamples)
+
+copper_rf_north_gam_metrics <- fit_gam(data = copper_rf_north, assessment_resamples = copper_rf_north_splits$assessment_resamples)
+
+copper_rf_north_rf_metrics <- fit_rf(data = copper_rf_north, assessment_resamples = copper_rf_north_splits$assessment_resamples)
+
+copper_rf_north_nn_metrics <- fit_nn(data = copper_rf_north, assessment_resamples = copper_rf_north_splits$assessment_resamples)
+
+copper_rf_north_model_comparison_table <- bind_rows(copper_rf_north_null_metrics,
+                                              copper_rf_north_lm_metrics,
+                                              copper_rf_north_gam_metrics,
+                                              copper_rf_north_rf_metrics,
+                                              copper_rf_north_nn_metrics)
+
+copper_rf_north_model_comparison_table %>% 
+  kbl(caption = "One-year-ahead predictive performance for Copper Rockfish (Northern CA).") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+
+### Copper Rockfish - CA, South of Point Conception (2023 assessment)
+
+```{r copper_rf_south_ml, cache = TRUE}
+copper_rf_south_splits <- split_training_testing_one_yr_ahead(data = copper_rf_south)
+
+copper_rf_south_null_metrics <- fit_null_model(data = copper_rf_south, testing_resamples_df = copper_rf_south_splits$testing_resamples_df)
+
+copper_rf_south_lm_metrics <- fit_lm(data = copper_rf_south, assessment_resamples = copper_rf_south_splits$assessment_resamples)
+
+copper_rf_south_gam_metrics <- fit_gam(data = copper_rf_south, assessment_resamples = copper_rf_south_splits$assessment_resamples)
+
+copper_rf_south_rf_metrics <- fit_rf(data = copper_rf_south, assessment_resamples = copper_rf_south_splits$assessment_resamples)
+
+copper_rf_south_nn_metrics <- fit_nn(data = copper_rf_south, assessment_resamples = copper_rf_south_splits$assessment_resamples)
+
+copper_rf_south_model_comparison_table <- bind_rows(copper_rf_south_null_metrics,
+                                              copper_rf_south_lm_metrics,
+                                              copper_rf_south_gam_metrics,
+                                              copper_rf_south_rf_metrics,
+                                              copper_rf_south_nn_metrics)
+
+copper_rf_south_model_comparison_table %>% 
+  kbl(caption = "One-year-ahead predictive performance for Copper Rockfish (Southern CA).") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+### Dover Sole (2021 assessment)
+
+```{r dover_sole_ml, cache = TRUE}
+dover_sole_splits <- split_training_testing_one_yr_ahead(data = dover_sole)
+
+dover_sole_null_metrics <- fit_null_model(data = dover_sole, testing_resamples_df = dover_sole_splits$testing_resamples_df)
+
+dover_sole_lm_metrics <- fit_lm(data = dover_sole, assessment_resamples = dover_sole_splits$assessment_resamples)
+
+dover_sole_gam_metrics <- fit_gam(data = dover_sole, assessment_resamples = dover_sole_splits$assessment_resamples)
+
+dover_sole_rf_metrics <- fit_rf(data = dover_sole, assessment_resamples = dover_sole_splits$assessment_resamples)
+
+dover_sole_nn_metrics <- fit_nn(data = dover_sole, assessment_resamples = dover_sole_splits$assessment_resamples)
+
+dover_sole_model_comparison_table <- bind_rows(dover_sole_null_metrics,
+                                              dover_sole_lm_metrics,
+                                              dover_sole_gam_metrics,
+                                              dover_sole_rf_metrics,
+                                              dover_sole_nn_metrics)
+
+dover_sole_model_comparison_table %>% 
+  kbl(caption = "One-year-ahead predictive performance for Dover Sole.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+
+### Lingcod - North of 40°10'N (2021 assessment)
+
+```{r lingcod_north_ml, cache = TRUE}
+lingcod_north_splits <- split_training_testing_one_yr_ahead(data = lingcod_north)
+
+lingcod_north_null_metrics <- fit_null_model(data = lingcod_north, testing_resamples_df = lingcod_north_splits$testing_resamples_df)
+
+lingcod_north_lm_metrics <- fit_lm(data = lingcod_north, assessment_resamples = lingcod_north_splits$assessment_resamples)
+
+lingcod_north_gam_metrics <- fit_gam(data = lingcod_north, assessment_resamples = lingcod_north_splits$assessment_resamples)
+
+lingcod_north_rf_metrics <- fit_rf(data = lingcod_north, assessment_resamples = lingcod_north_splits$assessment_resamples)
+
+lingcod_north_nn_metrics <- fit_nn(data = lingcod_north, assessment_resamples = lingcod_north_splits$assessment_resamples)
+
+lingcod_north_model_comparison_table <- bind_rows(lingcod_north_null_metrics,
+                                              lingcod_north_lm_metrics,
+                                              lingcod_north_gam_metrics,
+                                              lingcod_north_rf_metrics,
+                                              lingcod_north_nn_metrics)
+
+lingcod_north_model_comparison_table %>% 
+  kbl(caption = "One-year-ahead predictive performance for Lingcod (North of 40°10'N).") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+
+### Lingcod - South of 40°10'N (2021 assessment)
+
+```{r lingcod_south_ml, cache = TRUE}
+lingcod_south_splits <- split_training_testing_one_yr_ahead(data = lingcod_south)
+
+lingcod_south_null_metrics <- fit_null_model(data = lingcod_south, testing_resamples_df = lingcod_south_splits$testing_resamples_df)
+
+lingcod_south_lm_metrics <- fit_lm(data = lingcod_south, assessment_resamples = lingcod_south_splits$assessment_resamples)
+
+lingcod_south_gam_metrics <- fit_gam(data = lingcod_south, assessment_resamples = lingcod_south_splits$assessment_resamples)
+
+lingcod_south_rf_metrics <- fit_rf(data = lingcod_south, assessment_resamples = lingcod_south_splits$assessment_resamples)
+
+lingcod_south_nn_metrics <- fit_nn(data = lingcod_south, assessment_resamples = lingcod_south_splits$assessment_resamples)
+
+lingcod_south_model_comparison_table <- bind_rows(lingcod_south_null_metrics,
+                                              lingcod_south_lm_metrics,
+                                              lingcod_south_gam_metrics,
+                                              lingcod_south_rf_metrics,
+                                              lingcod_south_nn_metrics)
+
+lingcod_south_model_comparison_table %>% 
+  kbl(caption = "One-year-ahead predictive performance for Lingcod (South of 40°10'N).") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+
+### Petrale Sole (2023 assessment)
+
+```{r petrale_sole_ml, cache = TRUE}
+petrale_sole_splits <- split_training_testing_one_yr_ahead(data = petrale_sole)
+
+petrale_sole_null_metrics <- fit_null_model(data = petrale_sole, testing_resamples_df = petrale_sole_splits$testing_resamples_df)
+
+petrale_sole_lm_metrics <- fit_lm(data = petrale_sole, assessment_resamples = petrale_sole_splits$assessment_resamples)
+
+petrale_sole_gam_metrics <- fit_gam(data = petrale_sole, assessment_resamples = petrale_sole_splits$assessment_resamples)
+
+petrale_sole_rf_metrics <- fit_rf(data = petrale_sole, assessment_resamples = petrale_sole_splits$assessment_resamples)
+
+petrale_sole_nn_metrics <- fit_nn(data = petrale_sole, assessment_resamples = petrale_sole_splits$assessment_resamples)
+
+petrale_sole_model_comparison_table <- bind_rows(petrale_sole_null_metrics,
+                                              petrale_sole_lm_metrics,
+                                              petrale_sole_gam_metrics,
+                                              petrale_sole_rf_metrics,
+                                              petrale_sole_nn_metrics)
+
+petrale_sole_model_comparison_table %>% 
+  kbl(caption = "One-year-ahead predictive performance for Petrale Sole.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+### Quillback Rockfish - California (2025 assessment)
+
+```{r quillback_rf_ca_ml, cache = TRUE}
+quillback_rf_ca_splits <- split_training_testing_one_yr_ahead(data = quillback_rf_ca)
+
+quillback_rf_ca_null_metrics <- fit_null_model(data = quillback_rf_ca, testing_resamples_df = quillback_rf_ca_splits$testing_resamples_df)
+
+quillback_rf_ca_lm_metrics <- fit_lm(data = quillback_rf_ca, assessment_resamples = quillback_rf_ca_splits$assessment_resamples)
+
+quillback_rf_ca_gam_metrics <- fit_gam(data = quillback_rf_ca, assessment_resamples = quillback_rf_ca_splits$assessment_resamples)
+
+quillback_rf_ca_rf_metrics <- fit_rf(data = quillback_rf_ca, assessment_resamples = quillback_rf_ca_splits$assessment_resamples)
+
+quillback_rf_ca_nn_metrics <- fit_nn(data = quillback_rf_ca, assessment_resamples = quillback_rf_ca_splits$assessment_resamples)
+
+quillback_rf_ca_model_comparison_table <- bind_rows(quillback_rf_ca_null_metrics,
+                                              quillback_rf_ca_lm_metrics,
+                                              quillback_rf_ca_gam_metrics,
+                                              quillback_rf_ca_rf_metrics,
+                                              quillback_rf_ca_nn_metrics)
+
+quillback_rf_ca_model_comparison_table %>% 
+  kbl(caption = "One-year-ahead predictive performance for Quillback Rockfish (CA).") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+### Rex Sole (2023 assessment)
+
+```{r rex_sole_ml, cache = TRUE}
+rex_sole_splits <- split_training_testing_one_yr_ahead(data = rex_sole)
+
+rex_sole_null_metrics <- fit_null_model(data = rex_sole, testing_resamples_df = rex_sole_splits$testing_resamples_df)
+
+rex_sole_lm_metrics <- fit_lm(data = rex_sole, assessment_resamples = rex_sole_splits$assessment_resamples)
+
+rex_sole_gam_metrics <- fit_gam(data = rex_sole, assessment_resamples = rex_sole_splits$assessment_resamples)
+
+rex_sole_rf_metrics <- fit_rf(data = rex_sole, assessment_resamples = rex_sole_splits$assessment_resamples)
+
+rex_sole_nn_metrics <- fit_nn(data = rex_sole, assessment_resamples = rex_sole_splits$assessment_resamples)
+
+rex_sole_model_comparison_table <- bind_rows(rex_sole_null_metrics,
+                                              rex_sole_lm_metrics,
+                                              rex_sole_gam_metrics,
+                                              rex_sole_rf_metrics,
+                                              rex_sole_nn_metrics)
+
+rex_sole_model_comparison_table %>% 
+  kbl(caption = "One-year-ahead predictive performance for Rex Sole.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+### Rougheye/Blackspotted Rockfish (2025 assessment)
+
+```{r rougheye_rf_ml, cache = TRUE}
+rougheye_rf_splits <- split_training_testing_one_yr_ahead(data = rougheye_rf)
+
+rougheye_rf_null_metrics <- fit_null_model(data = rougheye_rf, testing_resamples_df = rougheye_rf_splits$testing_resamples_df)
+
+rougheye_rf_lm_metrics <- fit_lm(data = rougheye_rf, assessment_resamples = rougheye_rf_splits$assessment_resamples)
+
+rougheye_rf_gam_metrics <- fit_gam(data = rougheye_rf, assessment_resamples = rougheye_rf_splits$assessment_resamples)
+
+rougheye_rf_rf_metrics <- fit_rf(data = rougheye_rf, assessment_resamples = rougheye_rf_splits$assessment_resamples)
+
+rougheye_rf_nn_metrics <- fit_nn(data = rougheye_rf, assessment_resamples = rougheye_rf_splits$assessment_resamples)
+
+rougheye_rf_model_comparison_table <- bind_rows(rougheye_rf_null_metrics,
+                                              rougheye_rf_lm_metrics,
+                                              rougheye_rf_gam_metrics,
+                                              rougheye_rf_rf_metrics,
+                                              rougheye_rf_nn_metrics)
+
+rougheye_rf_model_comparison_table %>% 
+  kbl(caption = "One-year-ahead predictive performance for Rougheye/Blackspotted Rockfish") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+
+### Sablefish (2025 assessment)
+
+```{r sablefish_ml, cache = TRUE}
+sablefish_splits <- split_training_testing_one_yr_ahead(data = sablefish)
+
+sablefish_null_metrics <- fit_null_model(data = sablefish, testing_resamples_df = sablefish_splits$testing_resamples_df)
+
+sablefish_lm_metrics <- fit_lm(data = sablefish, assessment_resamples = sablefish_splits$assessment_resamples)
+
+sablefish_gam_metrics <- fit_gam(data = sablefish, assessment_resamples = sablefish_splits$assessment_resamples)
+
+sablefish_rf_metrics <- fit_rf(data = sablefish, assessment_resamples = sablefish_splits$assessment_resamples)
+
+sablefish_nn_metrics <- fit_nn(data = sablefish, assessment_resamples = sablefish_splits$assessment_resamples)
+
+sablefish_model_comparison_table <- bind_rows(sablefish_null_metrics,
+                                              sablefish_lm_metrics,
+                                              sablefish_gam_metrics,
+                                              sablefish_rf_metrics,
+                                              sablefish_nn_metrics)
+
+sablefish_model_comparison_table %>% 
+  kbl(caption = "One-year-ahead predictive performance for Sablefish.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+### Vermilion & Sunset Rockfish - Southern CA (2021 assessment)
+
+```{r vermilion_rf_sca_ml, cache = TRUE}
+vermilion_rf_sca_splits <- split_training_testing_one_yr_ahead(data = vermilion_rf_sca)
+
+vermilion_rf_sca_null_metrics <- fit_null_model(data = vermilion_rf_sca, testing_resamples_df = vermilion_rf_sca_splits$testing_resamples_df)
+
+vermilion_rf_sca_lm_metrics <- fit_lm(data = vermilion_rf_sca, assessment_resamples = vermilion_rf_sca_splits$assessment_resamples)
+
+vermilion_rf_sca_gam_metrics <- fit_gam(data = vermilion_rf_sca, assessment_resamples = vermilion_rf_sca_splits$assessment_resamples)
+
+vermilion_rf_sca_rf_metrics <- fit_rf(data = vermilion_rf_sca, assessment_resamples = vermilion_rf_sca_splits$assessment_resamples)
+
+vermilion_rf_sca_nn_metrics <- fit_nn(data = vermilion_rf_sca, assessment_resamples = vermilion_rf_sca_splits$assessment_resamples)
+
+vermilion_rf_sca_model_comparison_table <- bind_rows(vermilion_rf_sca_null_metrics,
+                                              vermilion_rf_sca_lm_metrics,
+                                              vermilion_rf_sca_gam_metrics,
+                                              vermilion_rf_sca_rf_metrics,
+                                              vermilion_rf_sca_nn_metrics)
+
+vermilion_rf_sca_model_comparison_table %>% 
+  kbl(caption = "One-year-ahead predictive performance for Vermilion & Sunset Rockfish (Southern CA).") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+### Vermilion & Sunset Rockfish - Northern CA (2021 assessment)
+
+```{r vermilion_rf_nca_ml, cache = TRUE}
+vermilion_rf_nca_splits <- split_training_testing_one_yr_ahead(data = vermilion_rf_nca)
+
+vermilion_rf_nca_null_metrics <- fit_null_model(data = vermilion_rf_nca, testing_resamples_df = vermilion_rf_nca_splits$testing_resamples_df)
+
+vermilion_rf_nca_lm_metrics <- fit_lm(data = vermilion_rf_nca, assessment_resamples = vermilion_rf_nca_splits$assessment_resamples)
+
+vermilion_rf_nca_gam_metrics <- fit_gam(data = vermilion_rf_nca, assessment_resamples = vermilion_rf_nca_splits$assessment_resamples)
+
+vermilion_rf_nca_rf_metrics <- fit_rf(data = vermilion_rf_nca, assessment_resamples = vermilion_rf_nca_splits$assessment_resamples)
+
+vermilion_rf_nca_nn_metrics <- fit_nn(data = vermilion_rf_nca, assessment_resamples = vermilion_rf_nca_splits$assessment_resamples)
+
+vermilion_rf_nca_model_comparison_table <- bind_rows(vermilion_rf_nca_null_metrics,
+                                              vermilion_rf_nca_lm_metrics,
+                                              vermilion_rf_nca_gam_metrics,
+                                              vermilion_rf_nca_rf_metrics,
+                                              vermilion_rf_nca_nn_metrics)
+
+vermilion_rf_nca_model_comparison_table %>% 
+  kbl(caption = "One-year-ahead predictive performance for Vermilion & Sunset Rockfish (Northern CA).") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+### Vermilion Rockfish - Oregon (2021 assessment)
+
+```{r vermilion_rf_or_ml, cache = TRUE}
+vermilion_rf_or_splits <- split_training_testing_one_yr_ahead(data = vermilion_rf_or)
+
+vermilion_rf_or_null_metrics <- fit_null_model(data = vermilion_rf_or, testing_resamples_df = vermilion_rf_or_splits$testing_resamples_df)
+
+vermilion_rf_or_lm_metrics <- fit_lm(data = vermilion_rf_or, assessment_resamples = vermilion_rf_or_splits$assessment_resamples)
+
+vermilion_rf_or_gam_metrics <- fit_gam(data = vermilion_rf_or, assessment_resamples = vermilion_rf_or_splits$assessment_resamples)
+
+vermilion_rf_or_rf_metrics <- fit_rf(data = vermilion_rf_or, assessment_resamples = vermilion_rf_or_splits$assessment_resamples)
+
+vermilion_rf_or_nn_metrics <- fit_nn(data = vermilion_rf_or, assessment_resamples = vermilion_rf_or_splits$assessment_resamples)
+
+vermilion_rf_or_model_comparison_table <- bind_rows(vermilion_rf_or_null_metrics,
+                                              vermilion_rf_or_lm_metrics,
+                                              vermilion_rf_or_gam_metrics,
+                                              vermilion_rf_or_rf_metrics,
+                                              vermilion_rf_or_nn_metrics)
+
+vermilion_rf_or_model_comparison_table %>% 
+  kbl(caption = "One-year-ahead predictive performance for Vermilion Rockfish (OR).") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+### Vermilion Rockfish - Washington (2021 assessment)
+
+```{r vermilion_rf_wa_ml, cache = TRUE}
+vermilion_rf_wa_splits <- split_training_testing_one_yr_ahead(data = vermilion_rf_wa)
+
+vermilion_rf_wa_null_metrics <- fit_null_model(data = vermilion_rf_wa, testing_resamples_df = vermilion_rf_wa_splits$testing_resamples_df)
+
+vermilion_rf_wa_lm_metrics <- fit_lm(data = vermilion_rf_wa, assessment_resamples = vermilion_rf_wa_splits$assessment_resamples)
+
+vermilion_rf_wa_gam_metrics <- fit_gam(data = vermilion_rf_wa, assessment_resamples = vermilion_rf_wa_splits$assessment_resamples)
+
+vermilion_rf_wa_rf_metrics <- fit_rf(data = vermilion_rf_wa, assessment_resamples = vermilion_rf_wa_splits$assessment_resamples)
+
+vermilion_rf_wa_nn_metrics <- fit_nn(data = vermilion_rf_wa, assessment_resamples = vermilion_rf_wa_splits$assessment_resamples)
+
+vermilion_rf_wa_model_comparison_table <- bind_rows(vermilion_rf_wa_null_metrics,
+                                              vermilion_rf_wa_lm_metrics,
+                                              vermilion_rf_wa_gam_metrics,
+                                              vermilion_rf_wa_rf_metrics,
+                                              vermilion_rf_wa_nn_metrics)
+
+vermilion_rf_wa_model_comparison_table %>% 
+  kbl(caption = "One-year-ahead predictive performance for Vermilion Rockfish (WA).") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+### Yellowtail Rockfish (2025 assessment)
+
+```{r yellowtail_rf_ml, cache = TRUE}
+yellowtail_rf_splits <- split_training_testing_one_yr_ahead(data = yellowtail_rf)
+
+yellowtail_rf_null_metrics <- fit_null_model(data = yellowtail_rf, testing_resamples_df = yellowtail_rf_splits$testing_resamples_df)
+
+yellowtail_rf_lm_metrics <- fit_lm(data = yellowtail_rf, assessment_resamples = yellowtail_rf_splits$assessment_resamples)
+
+yellowtail_rf_gam_metrics <- fit_gam(data = yellowtail_rf, assessment_resamples = yellowtail_rf_splits$assessment_resamples)
+
+yellowtail_rf_rf_metrics <- fit_rf(data = yellowtail_rf, assessment_resamples = yellowtail_rf_splits$assessment_resamples)
+
+yellowtail_rf_nn_metrics <- fit_nn(data = yellowtail_rf, assessment_resamples = yellowtail_rf_splits$assessment_resamples)
+
+yellowtail_rf_model_comparison_table <- bind_rows(yellowtail_rf_null_metrics,
+                                              yellowtail_rf_lm_metrics,
+                                              yellowtail_rf_gam_metrics,
+                                              yellowtail_rf_rf_metrics,
+                                              yellowtail_rf_nn_metrics)
+
+yellowtail_rf_model_comparison_table %>% 
+  kbl(caption = "One-year-ahead predictive performance for Yellowtail Rockfish.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+
