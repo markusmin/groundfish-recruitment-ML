@@ -1,5 +1,5 @@
 ---
-title: "JSOES Bongo Data Exploratory Analysis"
+title: "Stock Synthesis Recruitment Estimates"
 author: "Markus Min"
 date: "`r Sys.Date()`"
 output:
@@ -7,6 +7,12 @@ output:
 ---
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
+library(kableExtra)
+library(here)
+library(mixtools)
+library(diptest)
+source(here::here("R", "functions", "load_reformat_data.R"))
 ```
 
 ## Recruitment Data
@@ -90,3 +96,477 @@ Note that as of December 10, 2025, the assessment model files for these stocks h
 - Dover Sole
 - WA Copper Rockfish
 - OR Copper Rockfish
+
+
+```{r define_plot_function}
+plot_recr_cat <- function(data, stock_name){
+  recr_cat_colors <- c("Bust" = "#762a83",
+                       "Average" = "#fee08b",
+                       "Boom" = "#006d2c",
+                       "Outside bias adjustment" = "gray90")
+  
+  recr_plot <- ggplot(data, aes(x = Yr, y = Value, color = one_sd_boom_bust)) +
+    # geom_line(color = "black", lty = 2) +
+    geom_point(size = 3.5) +
+    scale_color_manual(values = recr_cat_colors, name = "Boom/Bust Recruitment") +
+    scale_x_continuous(breaks = seq(1900, 2020, by = 20)) +
+    theme_minimal() +
+    ggtitle(stock_name) +
+    ylab("Log Recruitment Deviation") +
+    xlab("Year") +
+    theme(legend.position = c(0.2, 0.8))
+  
+  return(recr_plot)
+}
+```
+
+
+## Categorical recruitment + autocorrelation visualization {.tabset .tabset-pills}
+
+
+### Black Rockfish - Northern CA (2023 assessment)
+
+```{r}
+plot_recr_cat(data = black_rf_nca,
+             stock_name = "Black Rockfish - Northern CA")
+
+# plot acf
+acf(black_rf_nca$Value)
+```
+
+
+### Black Rockfish - Central CA (2023 assessment)
+
+```{r}
+plot_recr_cat(data = black_rf_cca,
+             stock_name = "Black Rockfish - Central CA")
+
+# plot acf
+acf(black_rf_cca$Value)
+```
+
+
+### Black Rockfish - Oregon (2023 assessment)
+
+```{r}
+plot_recr_cat(data = black_rf_or,
+             stock_name = "Black Rockfish - Oregon")
+
+# plot acf
+acf(black_rf_or$Value)
+```
+
+
+### Black Rockfish - Washington (2023 assessment)
+
+```{r}
+plot_recr_cat(data = black_rf_wa,
+             stock_name = "Black Rockfish - Washington")
+
+# plot acf
+acf(black_rf_wa$Value)
+```
+
+### Canary Rockfish (2023 assessment)
+
+```{r}
+plot_recr_cat(data = canary_rf,
+             stock_name = "Canary Rockfish")
+
+# plot acf
+acf(canary_rf$Value)
+```
+
+### Copper Rockfish - CA, North of Point Conception (2023 assessment)
+
+```{r}
+plot_recr_cat(data = copper_rf_north,
+             stock_name = "Copper Rockfish - CA, North of Point Conception")
+
+# plot acf
+acf(copper_rf_north$Value)
+```
+
+
+### Copper Rockfish - CA, South of Point Conception (2023 assessment)
+
+```{r}
+plot_recr_cat(data = copper_rf_south,
+             stock_name = "Copper Rockfish - CA, South of Point Conception")
+
+# plot acf
+acf(copper_rf_south$Value)
+```
+
+### Dover Sole (2021 assessment)
+
+```{r}
+plot_recr_cat(data = dover_sole,
+             stock_name = "Dover Sole")
+
+# plot acf
+acf(dover_sole$Value)
+```
+
+
+### Lingcod - North of 40°10'N (2021 assessment)
+
+```{r}
+plot_recr_cat(data = lingcod_north,
+             stock_name = "Lingcod - North of 40°10'N")
+
+# plot acf
+acf(lingcod_north$Value)
+```
+
+
+### Lingcod - South of 40°10'N (2021 assessment)
+
+```{r}
+plot_recr_cat(data = lingcod_south,
+             stock_name = "Lingcod - South of 40°10'N")
+
+# plot acf
+acf(lingcod_south$Value)
+```
+
+
+### Petrale Sole (2023 assessment)
+
+```{r}
+plot_recr_cat(data = petrale_sole,
+             stock_name = "Petrale Sole")
+
+# plot acf
+acf(petrale_sole$Value)
+```
+
+### Quillback Rockfish - California (2025 assessment)
+
+```{r}
+plot_recr_cat(quillback_rf_ca,
+             stock_name = "Quillback Rockfish")
+
+# plot acf
+acf(quillback_rf_ca$Value)
+```
+
+### Rex Sole (2023 assessment)
+
+```{r}
+plot_recr_cat(data = rex_sole,
+             stock_name = "Rex Sole")
+
+# plot acf
+acf(rex_sole$Value)
+```
+
+### Rougheye/Blackspotted Rockfish (2025 assessment)
+
+```{r}
+plot_recr_cat(data = rougheye_rf,
+             stock_name = "Rougheye/Blackspotted Rockfish")
+
+# plot acf
+acf(rougheye_rf$Value)
+```
+
+
+### Sablefish (2025 assessment)
+
+```{r}
+plot_recr_cat(data = sablefish,
+             stock_name = "Sablefish")
+
+# plot acf
+acf(sablefish$Value)
+```
+
+### Vermilion & Sunset Rockfish - Southern CA (2021 assessment)
+
+```{r}
+plot_recr_cat(data = vermilion_rf_sca,
+             stock_name = "Vermilion & Sunset Rockfish - Southern CA")
+
+# plot acf
+acf(vermilion_rf_sca$Value)
+```
+
+### Vermilion & Sunset Rockfish - Northern CA (2021 assessment)
+
+```{r}
+plot_recr_cat(data = vermilion_rf_nca,
+             stock_name = "Vermilion & Sunset Rockfish - Northern CA")
+
+# plot acf
+acf(vermilion_rf_nca$Value)
+```
+
+### Vermilion Rockfish - Oregon (2021 assessment)
+
+```{r}
+plot_recr_cat(data = vermilion_rf_or,
+             stock_name = "Vermilion Rockfish - Oregon")
+
+# plot acf
+acf(vermilion_rf_or$Value)
+```
+
+### Vermilion Rockfish - Washington (2021 assessment)
+
+```{r}
+plot_recr_cat(data = vermilion_rf_wa,
+             stock_name = "Vermilion Rockfish - Washington")
+
+# plot acf
+acf(vermilion_rf_wa$Value)
+```
+
+### Yellowtail Rockfish (2025 assessment)
+
+```{r}
+plot_recr_cat(data = yellowtail_rf,
+             stock_name = "Yellowtail Rockfish")
+
+# plot acf
+acf(yellowtail_rf$Value)
+```
+
+
+
+## Recruitment as a mixture
+
+```{r create_table}
+# step 1: use dip test to examine when multimodality is supported
+black_rf_nca_multimodality_test <- dip.test(black_rf_nca$Value)
+black_rf_cca_multimodality_test <- dip.test(black_rf_cca$Value)
+black_rf_or_multimodality_test <- dip.test(black_rf_or$Value)
+black_rf_wa_multimodality_test <- dip.test(black_rf_wa$Value)
+canary_rf_multimodality_test <- dip.test(canary_rf$Value)
+copper_rf_north_multimodality_test <- dip.test(copper_rf_north$Value)
+copper_rf_south_multimodality_test <- dip.test(copper_rf_south$Value)
+dover_sole_multimodality_test <- dip.test(dover_sole$Value)
+lingcod_north_multimodality_test <- dip.test(lingcod_north$Value)
+lingcod_south_multimodality_test <- dip.test(lingcod_south$Value)
+petrale_sole_multimodality_test <- dip.test(petrale_sole$Value)
+quillback_rf_ca_multimodality_test <- dip.test(quillback_rf_ca$Value)
+rex_sole_multimodality_test <- dip.test(rex_sole$Value)
+rougheye_rf_multimodality_test <- dip.test(rougheye_rf$Value)
+sablefish_multimodality_test <- dip.test(sablefish$Value)
+vermilion_rf_sca_multimodality_test <- dip.test(vermilion_rf_sca$Value)
+vermilion_rf_nca_multimodality_test <- dip.test(vermilion_rf_nca$Value)
+vermilion_rf_or_multimodality_test <- dip.test(vermilion_rf_or$Value)
+vermilion_rf_wa_multimodality_test <- dip.test(vermilion_rf_wa$Value)
+yellowtail_rf_multimodality_test <- dip.test(yellowtail_rf$Value)
+
+# summarize this in a table
+diptest_table <- data.frame(
+             stock_name = c("Black Rockfish - Northern CA",
+                            "Black Rockfish - Central CA",
+                            "Black Rockfish - Oregon",
+                            "Black Rockfish - Washington",
+                            "Canary Rockfish",
+                            "Copper Rockfish - CA, North of Point Conception",
+                            "Copper Rockfish - CA, South of Point Conception",
+                            "Dover Sole",
+                            "Lingcod - North of 40°10'N",
+                            "Lingcod - South of 40°10'N",
+                            "Petrale Sole",
+                            "Quillback Rockfish",
+                            "Rex Sole",
+                            "Rougheye/Blackspotted Rockfish",
+                            "Sablefish",
+                            "Vermilion & Sunset Rockfish - Southern CA",
+                            "Vermilion & Sunset Rockfish - Northern CA",
+                            "Vermilion Rockfish - Oregon",
+                            "Vermilion Rockfish - Washington",
+                            "Yellowtail Rockfish"),
+             dip.test.p.value = c(black_rf_nca_multimodality_test$p.value,
+black_rf_cca_multimodality_test$p.value,
+black_rf_or_multimodality_test$p.value,
+black_rf_wa_multimodality_test$p.value,
+canary_rf_multimodality_test$p.value,
+copper_rf_north_multimodality_test$p.value,
+copper_rf_south_multimodality_test$p.value,
+dover_sole_multimodality_test$p.value,
+lingcod_north_multimodality_test$p.value,
+lingcod_south_multimodality_test$p.value,
+petrale_sole_multimodality_test$p.value,
+quillback_rf_ca_multimodality_test$p.value,
+rex_sole_multimodality_test$p.value,
+rougheye_rf_multimodality_test$p.value,
+sablefish_multimodality_test$p.value,
+vermilion_rf_sca_multimodality_test$p.value,
+vermilion_rf_nca_multimodality_test$p.value,
+vermilion_rf_or_multimodality_test$p.value,
+vermilion_rf_wa_multimodality_test$p.value,
+yellowtail_rf_multimodality_test$p.value))
+
+diptest_table %>% 
+  mutate(dip.test.p.value = round(dip.test.p.value, 3)) %>% 
+  kbl(caption = "p-values for Hartigan's dip test, where a significant p-value indicates a significantly non-unimodal distribution.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+
+```
+
+
+## Recruitment Histograms + mixtures {.tabset .tabset-pills}
+
+
+```{r mixture_function}
+fit_plot_mixture <- function(data, stock_name){
+  mix <- normalmixEM(data$Value, k = 2)
+  
+  # show the fit
+  plot(mix, density=TRUE, cex.axis=1.4, cex.lab=1.4, cex.main=1.8, breaks = 12,
+     main2="Recruitment deviations", xlab2="log recDevs", which = 2)
+}
+```
+
+### Black Rockfish - Northern CA (2023 assessment)
+
+```{r}
+fit_plot_mixture(data = black_rf_nca,
+             stock_name = "Black Rockfish - Northern CA")
+```
+
+
+### Black Rockfish - Central CA (2023 assessment)
+
+```{r}
+fit_plot_mixture(data = black_rf_cca,
+             stock_name = "Black Rockfish - Central CA")
+```
+
+
+### Black Rockfish - Oregon (2023 assessment)
+
+```{r}
+fit_plot_mixture(data = black_rf_or,
+             stock_name = "Black Rockfish - Oregon")
+```
+
+
+### Black Rockfish - Washington (2023 assessment)
+
+```{r}
+fit_plot_mixture(data = black_rf_wa,
+             stock_name = "Black Rockfish - Washington")
+```
+
+### Canary Rockfish (2023 assessment)
+
+```{r}
+fit_plot_mixture(data = canary_rf,
+             stock_name = "Canary Rockfish")
+```
+
+### Copper Rockfish - CA, North of Point Conception (2023 assessment)
+
+```{r}
+fit_plot_mixture(data = copper_rf_north,
+             stock_name = "Copper Rockfish - CA, North of Point Conception")
+```
+
+
+### Copper Rockfish - CA, South of Point Conception (2023 assessment)
+
+```{r}
+fit_plot_mixture(data = copper_rf_south,
+             stock_name = "Copper Rockfish - CA, South of Point Conception")
+```
+
+### Dover Sole (2021 assessment)
+
+```{r}
+fit_plot_mixture(data = dover_sole,
+             stock_name = "Dover Sole")
+```
+
+
+### Lingcod - North of 40°10'N (2021 assessment)
+
+```{r}
+fit_plot_mixture(data = lingcod_north,
+             stock_name = "Lingcod - North of 40°10'N")
+```
+
+
+### Lingcod - South of 40°10'N (2021 assessment)
+
+```{r}
+fit_plot_mixture(data = lingcod_south,
+             stock_name = "Lingcod - South of 40°10'N")
+```
+
+
+### Petrale Sole (2023 assessment)
+
+```{r}
+fit_plot_mixture(data = petrale_sole,
+             stock_name = "Petrale Sole")
+```
+
+### Quillback Rockfish - California (2025 assessment)
+
+```{r}
+fit_plot_mixture(quillback_rf_ca,
+             stock_name = "Quillback Rockfish")
+```
+
+### Rex Sole (2023 assessment)
+
+```{r}
+fit_plot_mixture(data = rex_sole,
+             stock_name = "Rex Sole")
+```
+
+### Rougheye/Blackspotted Rockfish (2025 assessment)
+
+```{r}
+fit_plot_mixture(data = rougheye_rf,
+             stock_name = "Rougheye/Blackspotted Rockfish")
+```
+
+
+### Sablefish (2025 assessment)
+
+```{r}
+fit_plot_mixture(data = sablefish,
+             stock_name = "Sablefish")
+```
+
+### Vermilion & Sunset Rockfish - Southern CA (2021 assessment)
+
+```{r}
+fit_plot_mixture(data = vermilion_rf_sca,
+             stock_name = "Vermilion & Sunset Rockfish - Southern CA")
+```
+
+### Vermilion & Sunset Rockfish - Northern CA (2021 assessment)
+
+```{r}
+fit_plot_mixture(data = vermilion_rf_nca,
+             stock_name = "Vermilion & Sunset Rockfish - Northern CA")
+```
+
+### Vermilion Rockfish - Oregon (2021 assessment)
+
+```{r}
+fit_plot_mixture(data = vermilion_rf_or,
+             stock_name = "Vermilion Rockfish - Oregon")
+```
+
+### Vermilion Rockfish - Washington (2021 assessment)
+
+```{r}
+fit_plot_mixture(data = vermilion_rf_wa,
+             stock_name = "Vermilion Rockfish - Washington")
+```
+
+### Yellowtail Rockfish (2025 assessment)
+
+```{r}
+fit_plot_mixture(data = yellowtail_rf,
+             stock_name = "Yellowtail Rockfish")
+```

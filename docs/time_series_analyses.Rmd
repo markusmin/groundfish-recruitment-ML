@@ -1,0 +1,210 @@
+---
+title: "Time series analyses"
+author: "Markus Min"
+date: "`r Sys.Date()`"
+output:
+  html_document
+---
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.height = 8, fig.width = 8)
+```
+
+```{r load_data_functions}
+library(here)
+library(kableExtra)
+source(here::here("R", "functions", "load_reformat_data.R"))
+```
+
+
+```{r get_all_data_in_one}
+mutate(dplyr::select(black_rf_nca_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Black Rockfish (Northern CA)") %>% 
+  bind_rows(mutate(dplyr::select(black_rf_cca_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Black Rockfish (Central CA)")) %>% 
+    bind_rows(mutate(dplyr::select(black_rf_or_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Black Rockfish (OR)")) %>% 
+    bind_rows(mutate(dplyr::select(black_rf_wa_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Black Rockfish (WA)")) %>% 
+    bind_rows(mutate(dplyr::select(copper_rf_north_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Copper Rockfish (North)")) %>% 
+    bind_rows(mutate(dplyr::select(copper_rf_south_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Copper Rockfish (South)")) %>% 
+    bind_rows(mutate(dplyr::select(canary_rf_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Canary Rockfish")) %>% 
+    bind_rows(mutate(dplyr::select(dover_sole_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Dover Sole")) %>% 
+    bind_rows(mutate(dplyr::select(lingcod_north_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Lingcod (North)")) %>% 
+    bind_rows(mutate(dplyr::select(lingcod_south_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Lingcod (South)")) %>% 
+    bind_rows(mutate(dplyr::select(petrale_sole_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Petrale Sole")) %>% 
+    bind_rows(mutate(dplyr::select(rex_sole_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Rex Sole")) %>% 
+    bind_rows(mutate(dplyr::select(vermilion_rf_sca_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Vermilion Rockfish (Southern CA)")) %>% 
+    bind_rows(mutate(dplyr::select(vermilion_rf_nca_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Vermilion Rockfish (Northern CA)")) %>% 
+    bind_rows(mutate(dplyr::select(vermilion_rf_or_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Vermilion Rockfish (OR)")) %>% 
+    bind_rows(mutate(dplyr::select(vermilion_rf_wa_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Vermilion Rockfish (WA)")) %>% 
+    bind_rows(mutate(dplyr::select(quillback_rf_ca_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Quillback Rockfish")) %>% 
+      bind_rows(mutate(dplyr::select(sablefish_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Sablefish")) %>% 
+    bind_rows(mutate(dplyr::select(rougheye_rf_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Rougheye/Blackspotted Rockfish")) %>% 
+    bind_rows(mutate(dplyr::select(yellowtail_rf_cat_rec, Yr, Value, one_sd_boom_bust), stock = "Yellowtail Rockfish")) -> recdevs_all_long
+```
+
+## Synchrony
+```{r}
+  recr_cat_colors <- c("Bust" = "#762a83",
+                       "Average" = "#fee08b",
+                       "Boom" = "#006d2c",
+                       "Outside bias adjustment" = "gray90")
+
+ggplot(recdevs_all_long, aes(x = Yr, y = stock, fill = one_sd_boom_bust)) +
+  geom_tile() +
+  scale_fill_manual(values  = recr_cat_colors, name = "Boom/Bust\nRecruitment") +
+  scale_y_discrete(limits = rev) +
+  theme_minimal()
+  
+# which years have the most boom/bust?
+as.data.frame(table(recdevs_all_long$Yr,
+  recdevs_all_long$one_sd_boom_bust)) %>% 
+  pivot_wider(values_from = Freq, names_from = Var2) %>% 
+  dplyr::rename(Year = Var1) -> recdevs_allstocks_table
+
+# top five boom years
+recdevs_allstocks_table %>% 
+  filter(Boom >= 6) %>% 
+  arrange(Year) %>% 
+  kbl(caption = "Years where 1/3 or more of the stocks had boom recruitment.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+
+# top five bust years
+recdevs_allstocks_table %>% 
+  filter(Bust >= 6) %>% 
+  arrange(Year) %>% 
+  kbl(caption = "Years where 1/3 or more of the stocks had bust recruitment.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+## PCA showing common boom/bust years
+
+```{r fig.height = 12, fig.width = 8}
+# run the same PCA as before
+# Extract only environmental covariates
+feature_df %>%
+  column_to_rownames("Yr") -> features_only
+
+# run a PCA
+features_pca <- prcomp(features_only)
+
+# identify top common boom and bust years
+bust_years <- as.numeric(as.character(subset(recdevs_allstocks_table, Bust >= 6)$Year))
+boom_years <- as.numeric(as.character(subset(recdevs_allstocks_table, Boom >= 6)$Year))
+
+
+# extra pca scores
+as.data.frame(features_pca$x) %>%
+  rownames_to_column("Yr") %>%
+  mutate(Yr = as.integer(Yr)) %>%
+  mutate(common_years = ifelse(Yr %in% bust_years, "Common Bust Year",
+                               ifelse(Yr %in% boom_years, "Common Boom Year",
+                                      "Normal Year"))) -> features_pca_scores_data
+
+# extract loadings
+features_pca_loadings <- as.data.frame(features_pca$rotation) %>%
+  rownames_to_column("variable") %>%
+  dplyr::select(variable, PC1, PC2, PC3)
+
+# Scale loadings for plotting (so arrows fit nicely in the score plot)
+loading_scale <- 3
+features_pca_loadings <- features_pca_loadings %>%
+  mutate(PC1 = PC1 * loading_scale,
+         PC2 = PC2 * loading_scale,
+         PC3 = PC3 * loading_scale)
+
+# Calculate variance explained
+var_explained <- round(100 * features_pca$sdev^2 / sum(features_pca$sdev^2), 1)
+
+# Plot PC1 vs PC2
+pc1_pc2_rec_plot <- ggplot() +
+  # Year points colored by recruitment category
+  geom_point(data = features_pca_scores_data,
+             aes(x = PC1, y = PC2, color = common_years),
+             size = 3) +
+  # Year labels
+  geom_text(data = features_pca_scores_data,
+            aes(x = PC1, y = PC2, label = Yr, color = common_years),
+            nudge_y = 0.2, size = 3) +
+  # Loading arrows
+  geom_segment(data = features_pca_loadings,
+               aes(x = 0, y = 0, xend = PC1, yend = PC2),
+               arrow = arrow(length = unit(0.2, "cm")),
+               color = "gray40") +
+  # Loading labels
+  geom_text(data = features_pca_loadings,
+            aes(x = PC1, y = PC2, label = variable),
+            color = "gray40", size = 3, nudge_y = 0.15) +
+  # Axis labels with variance explained
+  labs(x = paste0("PC1 (", var_explained[1], "%)"),
+       y = paste0("PC2 (", var_explained[2], "%)"),
+       color = "Recruitment") +
+  scale_color_manual(values = c("Normal Year" = "gray60",
+                                "Common Boom Year" = "steelblue",
+                                "Common Bust Year" = "tomato")) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray80") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray80") +
+  theme_minimal()
+
+# Plot PC1 vs PC3
+pc1_pc3_rec_plot <- ggplot() +
+  # Year points colored by recruitment category
+  geom_point(data = features_pca_scores_data,
+             aes(x = PC1, y = PC3, color = common_years),
+             size = 3) +
+  # Year labels
+  geom_text(data = features_pca_scores_data,
+            aes(x = PC1, y = PC3, label = Yr, color = common_years),
+            nudge_y = 0.2, size = 3) +
+  # Loading arrows
+  geom_segment(data = features_pca_loadings,
+               aes(x = 0, y = 0, xend = PC1, yend = PC3),
+               arrow = arrow(length = unit(0.2, "cm")),
+               color = "gray40") +
+  # Loading labels
+  geom_text(data = features_pca_loadings,
+            aes(x = PC1, y = PC3, label = variable),
+            color = "gray40", size = 3, nudge_y = 0.15) +
+  # Axis labels with variance explained
+  labs(x = paste0("PC1 (", var_explained[1], "%)"),
+       y = paste0("PC3 (", var_explained[3], "%)"),
+       color = "Recruitment") +
+  scale_color_manual(values = c("Normal Year" = "gray60",
+                                "Common Boom Year" = "steelblue",
+                                "Common Bust Year" = "tomato")) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray80") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray80") +
+  theme_minimal()
+
+# Plot PC2 vs PC3
+pc2_pc3_rec_plot <- ggplot() +
+  # Year points colored by recruitment category
+  geom_point(data = features_pca_scores_data,
+             aes(x = PC2, y = PC3, color = common_years),
+             size = 3) +
+  # Year labels
+  geom_text(data = features_pca_scores_data,
+            aes(x = PC2, y = PC3, label = Yr, color = common_years),
+            nudge_y = 0.2, size = 3) +
+  # Loading arrows
+  geom_segment(data = features_pca_loadings,
+               aes(x = 0, y = 0, xend = PC2, yend = PC3),
+               arrow = arrow(length = unit(0.2, "cm")),
+               color = "gray40") +
+  # Loading labels
+  geom_text(data = features_pca_loadings,
+            aes(x = PC2, y = PC3, label = variable),
+            color = "gray40", size = 3, nudge_y = 0.15) +
+  # Axis labels with variance explained
+  labs(x = paste0("PC2 (", var_explained[2], "%)"),
+       y = paste0("PC3 (", var_explained[3], "%)"),
+       color = "Recruitment") +
+  scale_color_manual(values = c("Normal Year" = "gray60",
+                                "Common Boom Year" = "steelblue",
+                                "Common Bust Year" = "tomato")) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray80") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray80") +
+  theme_minimal()
+
+ggarrange(pc1_pc2_rec_plot, pc1_pc3_rec_plot, pc2_pc3_rec_plot,
+          nrow = 3, ncol = 1)
+
+```
+
+

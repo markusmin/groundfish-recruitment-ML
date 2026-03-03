@@ -6,7 +6,311 @@ output:
   html_document
 ---
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
-knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.height = 12, fig.width = 8)
 ```
 
-Some cool multivariate stuff.
+
+```{r load_data_functions}
+library(here)
+source(here::here("R", "functions", "load_reformat_data.R"))
+```
+
+
+```{r define_multivariate_analysis_functions}
+# correlation structure in our features
+feature_cor_mat <- cor(dplyr::select(feature_df, -Yr))
+
+as.data.frame(feature_cor_mat) %>% 
+  rownames_to_column("Var1") %>% 
+  pivot_longer(cols = -c("Var1"), names_to = "Var2", values_to = "Value") -> feature_cor_values
+
+# feature_cor_values %>%
+#   filter(!(Var1 == Var2)) %>% 
+#   arrange(desc(abs(Value)))
+# corrplot(feature_cor_mat)
+# well, some are quite correlated but none are >= 0.8
+
+# Extract only environmental covariates
+feature_df %>%
+  column_to_rownames("Yr") -> features_only
+
+# run a PCA
+features_pca <- prcomp(features_only)
+# summary(features_pca)
+
+### function: plot the environmental covariates PCA colored by one stock's recruitment
+plot_PCA_recruitment <- function(data, stock_name){
+# extra pca scores
+as.data.frame(features_pca$x) %>%
+  rownames_to_column("Yr") %>%
+  mutate(Yr = as.integer(Yr)) %>%
+  left_join(data %>% dplyr::select(Yr, one_sd_boom_bust), by = "Yr") %>% 
+  filter(!(is.na(one_sd_boom_bust))) -> features_pca_scores_data
+
+# extract loadings
+features_pca_loadings <- as.data.frame(features_pca$rotation) %>%
+  rownames_to_column("variable") %>%
+  dplyr::select(variable, PC1, PC2, PC3)
+
+# Scale loadings for plotting (so arrows fit nicely in the score plot)
+loading_scale <- 3
+features_pca_loadings <- features_pca_loadings %>%
+  mutate(PC1 = PC1 * loading_scale,
+         PC2 = PC2 * loading_scale,
+         PC3 = PC3 * loading_scale)
+
+# Calculate variance explained
+var_explained <- round(100 * features_pca$sdev^2 / sum(features_pca$sdev^2), 1)
+
+# Plot PC1 vs PC2
+pc1_pc2_rec_plot <- ggplot() +
+  # Year points colored by recruitment category
+  geom_point(data = features_pca_scores_data,
+             aes(x = PC1, y = PC2, color = one_sd_boom_bust),
+             size = 3) +
+  # Year labels
+  geom_text(data = features_pca_scores_data,
+            aes(x = PC1, y = PC2, label = Yr, color = one_sd_boom_bust),
+            nudge_y = 0.2, size = 3) +
+  # Loading arrows
+  geom_segment(data = features_pca_loadings,
+               aes(x = 0, y = 0, xend = PC1, yend = PC2),
+               arrow = arrow(length = unit(0.2, "cm")),
+               color = "gray40") +
+  # Loading labels
+  geom_text(data = features_pca_loadings,
+            aes(x = PC1, y = PC2, label = variable),
+            color = "gray40", size = 3, nudge_y = 0.15) +
+  # Axis labels with variance explained
+  labs(x = paste0("PC1 (", var_explained[1], "%)"),
+       y = paste0("PC2 (", var_explained[2], "%)"),
+       color = "Recruitment") +
+  scale_color_manual(values = c("Average" = "gray60",
+                                "Boom" = "steelblue",
+                                "Bust" = "tomato")) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray80") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray80") +
+  theme_minimal() +
+  ggtitle(stock_name)
+
+# Plot PC1 vs PC3
+pc1_pc3_rec_plot <- ggplot() +
+  # Year points colored by recruitment category
+  geom_point(data = features_pca_scores_data,
+             aes(x = PC1, y = PC3, color = one_sd_boom_bust),
+             size = 3) +
+  # Year labels
+  geom_text(data = features_pca_scores_data,
+            aes(x = PC1, y = PC3, label = Yr, color = one_sd_boom_bust),
+            nudge_y = 0.2, size = 3) +
+  # Loading arrows
+  geom_segment(data = features_pca_loadings,
+               aes(x = 0, y = 0, xend = PC1, yend = PC3),
+               arrow = arrow(length = unit(0.2, "cm")),
+               color = "gray40") +
+  # Loading labels
+  geom_text(data = features_pca_loadings,
+            aes(x = PC1, y = PC3, label = variable),
+            color = "gray40", size = 3, nudge_y = 0.15) +
+  # Axis labels with variance explained
+  labs(x = paste0("PC1 (", var_explained[1], "%)"),
+       y = paste0("PC3 (", var_explained[3], "%)"),
+       color = "Recruitment") +
+  scale_color_manual(values = c("Average" = "gray60",
+                                "Boom" = "steelblue",
+                                "Bust" = "tomato")) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray80") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray80") +
+  theme_minimal() +
+  ggtitle(stock_name)
+
+# Plot PC2 vs PC3
+pc2_pc3_rec_plot <- ggplot() +
+  # Year points colored by recruitment category
+  geom_point(data = features_pca_scores_data,
+             aes(x = PC2, y = PC3, color = one_sd_boom_bust),
+             size = 3) +
+  # Year labels
+  geom_text(data = features_pca_scores_data,
+            aes(x = PC2, y = PC3, label = Yr, color = one_sd_boom_bust),
+            nudge_y = 0.2, size = 3) +
+  # Loading arrows
+  geom_segment(data = features_pca_loadings,
+               aes(x = 0, y = 0, xend = PC2, yend = PC3),
+               arrow = arrow(length = unit(0.2, "cm")),
+               color = "gray40") +
+  # Loading labels
+  geom_text(data = features_pca_loadings,
+            aes(x = PC2, y = PC3, label = variable),
+            color = "gray40", size = 3, nudge_y = 0.15) +
+  # Axis labels with variance explained
+  labs(x = paste0("PC2 (", var_explained[2], "%)"),
+       y = paste0("PC3 (", var_explained[3], "%)"),
+       color = "Recruitment") +
+  scale_color_manual(values = c("Average" = "gray60",
+                                "Boom" = "steelblue",
+                                "Bust" = "tomato")) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray80") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray80") +
+  theme_minimal() +
+  ggtitle(stock_name)
+
+
+pca_rec_plot <- ggarrange(pc1_pc2_rec_plot, pc1_pc3_rec_plot, pc2_pc3_rec_plot,
+          nrow = 3, ncol = 1)
+
+return(pca_rec_plot)
+}
+```
+
+
+## PCA Visualizations {.tabset .tabset-pills}
+
+
+### Black Rockfish - Northern CA (2023 assessment)
+
+```{r}
+plot_PCA_recruitment(data = black_rf_nca,
+             stock_name = "Black Rockfish - Northern CA")
+```
+
+
+### Black Rockfish - Central CA (2023 assessment)
+
+```{r}
+plot_PCA_recruitment(data = black_rf_cca,
+             stock_name = "Black Rockfish - Central CA")
+```
+
+
+### Black Rockfish - Oregon (2023 assessment)
+
+```{r}
+plot_PCA_recruitment(data = black_rf_or,
+             stock_name = "Black Rockfish - Oregon")
+```
+
+
+### Black Rockfish - Washington (2023 assessment)
+
+```{r}
+plot_PCA_recruitment(data = black_rf_wa,
+             stock_name = "Black Rockfish - Washington")
+```
+
+### Canary Rockfish (2023 assessment)
+
+```{r}
+plot_PCA_recruitment(data = canary_rf,
+             stock_name = "Canary Rockfish")
+```
+
+### Copper Rockfish - CA, North of Point Conception (2023 assessment)
+
+```{r}
+plot_PCA_recruitment(data = copper_rf_north,
+             stock_name = "Copper Rockfish - CA, North of Point Conception")
+```
+
+
+### Copper Rockfish - CA, South of Point Conception (2023 assessment)
+
+```{r}
+plot_PCA_recruitment(data = copper_rf_south,
+             stock_name = "Copper Rockfish - CA, South of Point Conception")
+```
+
+### Dover Sole (2021 assessment)
+
+```{r}
+plot_PCA_recruitment(data = dover_sole,
+             stock_name = "Dover Sole")
+```
+
+
+### Lingcod - North of 40°10'N (2021 assessment)
+
+```{r}
+plot_PCA_recruitment(data = lingcod_north,
+             stock_name = "Lingcod - North of 40°10'N")
+```
+
+
+### Lingcod - South of 40°10'N (2021 assessment)
+
+```{r}
+plot_PCA_recruitment(data = lingcod_south,
+             stock_name = "Lingcod - South of 40°10'N")
+```
+
+
+### Petrale Sole (2023 assessment)
+
+```{r}
+plot_PCA_recruitment(data = petrale_sole,
+             stock_name = "Petrale Sole")
+```
+
+### Quillback Rockfish - California (2025 assessment)
+
+```{r}
+plot_PCA_recruitment(quillback_rf_ca,
+             stock_name = "Quillback Rockfish")
+```
+
+### Rex Sole (2023 assessment)
+
+```{r}
+plot_PCA_recruitment(data = rex_sole,
+             stock_name = "Rex Sole")
+```
+
+### Rougheye/Blackspotted Rockfish (2025 assessment)
+
+```{r}
+plot_PCA_recruitment(data = rougheye_rf,
+             stock_name = "Rougheye/Blackspotted Rockfish")
+```
+
+
+### Sablefish (2025 assessment)
+
+```{r}
+plot_PCA_recruitment(data = sablefish,
+             stock_name = "Sablefish")
+```
+
+### Vermilion & Sunset Rockfish - Southern CA (2021 assessment)
+
+```{r}
+plot_PCA_recruitment(data = vermilion_rf_sca,
+             stock_name = "Vermilion & Sunset Rockfish - Southern CA")
+```
+
+### Vermilion & Sunset Rockfish - Northern CA (2021 assessment)
+
+```{r}
+plot_PCA_recruitment(data = vermilion_rf_nca,
+             stock_name = "Vermilion & Sunset Rockfish - Northern CA")
+```
+
+### Vermilion Rockfish - Oregon (2021 assessment)
+
+```{r}
+plot_PCA_recruitment(data = vermilion_rf_or,
+             stock_name = "Vermilion Rockfish - Oregon")
+```
+
+### Vermilion Rockfish - Washington (2021 assessment)
+
+```{r}
+plot_PCA_recruitment(data = vermilion_rf_wa,
+             stock_name = "Vermilion Rockfish - Washington")
+```
+
+### Yellowtail Rockfish (2025 assessment)
+
+```{r}
+plot_PCA_recruitment(data = yellowtail_rf,
+             stock_name = "Yellowtail Rockfish")
+```

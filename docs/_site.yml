@@ -8,13 +8,15 @@ navbar:
     - text: "Data visualizations"
       menu:  
       - text: "Recruitment data"
-        href: recruit_overview.html
+        href: recruitment_overview.html
       - text: "Covariates"
         href: covariates_overview.html
     - text: "Analyses"
       menu:  
       - text: "Multivariate analyses"
         href: multivariate_analyses.html   
+      - text: "Time series analyses"
+        href: time_series_analyses.html   
       - text: "One-Year-Ahead Prediction"
         href: ml_predictions.html   
 output:
