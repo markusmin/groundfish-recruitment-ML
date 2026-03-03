@@ -588,7 +588,7 @@ fit_nn <- function(data, assessment_resamples){
 ```
 
 
-## One-Year-Ahead Predictive Performance {.tabset .tabset-pills}
+## Centroids of groundfish distributions from trawl survey data {.tabset .tabset-pills}
 
 ### Black Rockfish - Northern CA (2023 assessment)
 
