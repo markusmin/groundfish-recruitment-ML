@@ -6,12 +6,15 @@ output:
   html_document
 ---
 
-Coming soon - one-year-ahead predictive performance compared across all stocks using four models:
+One-year-ahead predictive performance compared across all stocks using four models:
 
 1. Linear regression
 2. GAM
 3. Random forest
 4. Neural networks
+
+
+
 
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
@@ -623,6 +626,16 @@ black_rf_nca_model_comparison_table %>%
   kable_styling(latex_options = "HOLD_position")
 ```
 
+```{r black_rf_nca_table}
+black_rf_nca_null_rmse <- subset(black_rf_nca_model_comparison_table, model == "null" & .metric == "rmse")$.estimate
+black_rf_nca_model_comparison_table %>% 
+  filter(.metric == "rmse") %>% 
+  mutate(performance_v_null = round(.estimate/black_rf_nca_null_rmse, 2)) %>% 
+  dplyr::select(model, performance_v_null) %>% 
+  kbl(caption = "RMSE of One-year-ahead predictive performance for Black Rockfish (Northern CA), relative to null model.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+
+```
 
 ### Black Rockfish - Central CA (2023 assessment)
 
@@ -650,6 +663,16 @@ black_rf_cca_model_comparison_table %>%
   kable_styling(latex_options = "HOLD_position")
 ```
 
+```{r black_rf_cca_table}
+black_rf_cca_null_rmse <- subset(black_rf_cca_model_comparison_table, model == "null" & .metric == "rmse")$.estimate
+black_rf_cca_model_comparison_table %>% 
+  filter(.metric == "rmse") %>% 
+  mutate(performance_v_null = round(.estimate/black_rf_cca_null_rmse, 2)) %>% 
+  dplyr::select(model, performance_v_null) %>% 
+  kbl(caption = "RMSE of One-year-ahead predictive performance for Black Rockfish (Central CA), relative to null model.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+
+```
 
 ### Black Rockfish - Oregon (2023 assessment)
 
@@ -677,6 +700,16 @@ black_rf_or_model_comparison_table %>%
   kable_styling(latex_options = "HOLD_position")
 ```
 
+```{r black_rf_or_table}
+black_rf_or_null_rmse <- subset(black_rf_or_model_comparison_table, model == "null" & .metric == "rmse")$.estimate
+black_rf_or_model_comparison_table %>% 
+  filter(.metric == "rmse") %>% 
+  mutate(performance_v_null = round(.estimate/black_rf_or_null_rmse, 2)) %>% 
+  dplyr::select(model, performance_v_null) %>% 
+  kbl(caption = "RMSE of One-year-ahead predictive performance for Black Rockfish (OR), relative to null model.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+
+```
 
 ### Black Rockfish - Washington (2023 assessment)
 
@@ -702,6 +735,17 @@ black_rf_wa_model_comparison_table <- bind_rows(black_rf_wa_null_metrics,
 black_rf_wa_model_comparison_table %>% 
   kbl(caption = "One-year-ahead predictive performance for Black Rockfish (WA).") %>% 
   kable_styling(latex_options = "HOLD_position")
+```
+
+```{r black_rf_wa_table}
+black_rf_wa_null_rmse <- subset(black_rf_wa_model_comparison_table, model == "null" & .metric == "rmse")$.estimate
+black_rf_wa_model_comparison_table %>% 
+  filter(.metric == "rmse") %>% 
+  mutate(performance_v_null = round(.estimate/black_rf_wa_null_rmse, 2)) %>% 
+  dplyr::select(model, performance_v_null) %>% 
+  kbl(caption = "RMSE of One-year-ahead predictive performance for Black Rockfish (OR), relative to null model.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+
 ```
 
 ### Canary Rockfish (2023 assessment)
@@ -730,6 +774,17 @@ canary_rf_model_comparison_table %>%
   kable_styling(latex_options = "HOLD_position")
 ```
 
+```{r canary_rf_table}
+canary_rf_null_rmse <- subset(canary_rf_model_comparison_table, model == "null" & .metric == "rmse")$.estimate
+canary_rf_model_comparison_table %>% 
+  filter(.metric == "rmse") %>% 
+  mutate(performance_v_null = round(.estimate/canary_rf_null_rmse, 2)) %>% 
+  dplyr::select(model, performance_v_null) %>% 
+  kbl(caption = "RMSE of One-year-ahead predictive performance for Black Rockfish (OR), relative to null model.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+
+```
+
 ### Copper Rockfish - CA, North of Point Conception (2023 assessment)
 
 ```{r copper_rf_north_ml, cache = TRUE}
@@ -756,6 +811,16 @@ copper_rf_north_model_comparison_table %>%
   kable_styling(latex_options = "HOLD_position")
 ```
 
+```{r copper_rf_north_table}
+copper_rf_north_null_rmse <- subset(copper_rf_north_model_comparison_table, model == "null" & .metric == "rmse")$.estimate
+copper_rf_north_model_comparison_table %>% 
+  filter(.metric == "rmse") %>% 
+  mutate(performance_v_null = round(.estimate/copper_rf_north_null_rmse, 2)) %>% 
+  dplyr::select(model, performance_v_null) %>% 
+  kbl(caption = "RMSE of One-year-ahead predictive performance for Copper Rockfish (Northern CA), relative to null model.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+
+```
 
 ### Copper Rockfish - CA, South of Point Conception (2023 assessment)
 
@@ -781,6 +846,17 @@ copper_rf_south_model_comparison_table <- bind_rows(copper_rf_south_null_metrics
 copper_rf_south_model_comparison_table %>% 
   kbl(caption = "One-year-ahead predictive performance for Copper Rockfish (Southern CA).") %>% 
   kable_styling(latex_options = "HOLD_position")
+```
+
+```{r copper_rf_south_table}
+copper_rf_south_null_rmse <- subset(copper_rf_south_model_comparison_table, model == "null" & .metric == "rmse")$.estimate
+copper_rf_south_model_comparison_table %>% 
+  filter(.metric == "rmse") %>% 
+  mutate(performance_v_null = round(.estimate/copper_rf_south_null_rmse, 2)) %>% 
+  dplyr::select(model, performance_v_null) %>% 
+  kbl(caption = "RMSE of One-year-ahead predictive performance for Copper Rockfish (Southern CA), relative to null model.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+
 ```
 
 ### Dover Sole (2021 assessment)
@@ -809,6 +885,16 @@ dover_sole_model_comparison_table %>%
   kable_styling(latex_options = "HOLD_position")
 ```
 
+```{r dover_sole_table}
+dover_sole_null_rmse <- subset(dover_sole_model_comparison_table, model == "null" & .metric == "rmse")$.estimate
+dover_sole_model_comparison_table %>% 
+  filter(.metric == "rmse") %>% 
+  mutate(performance_v_null = round(.estimate/dover_sole_null_rmse, 2)) %>% 
+  dplyr::select(model, performance_v_null) %>% 
+  kbl(caption = "RMSE of One-year-ahead predictive performance for Dover Sole, relative to null model.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+
+```
 
 ### Lingcod - North of 40°10'N (2021 assessment)
 
@@ -834,6 +920,17 @@ lingcod_north_model_comparison_table <- bind_rows(lingcod_north_null_metrics,
 lingcod_north_model_comparison_table %>% 
   kbl(caption = "One-year-ahead predictive performance for Lingcod (North of 40°10'N).") %>% 
   kable_styling(latex_options = "HOLD_position")
+```
+
+```{r lingcod_north_table}
+lingcod_north_null_rmse <- subset(lingcod_north_model_comparison_table, model == "null" & .metric == "rmse")$.estimate
+lingcod_north_model_comparison_table %>% 
+  filter(.metric == "rmse") %>% 
+  mutate(performance_v_null = round(.estimate/lingcod_north_null_rmse, 2)) %>% 
+  dplyr::select(model, performance_v_null) %>% 
+  kbl(caption = "RMSE of One-year-ahead predictive performance for Lingcod (North of 40°10'N), relative to null model.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+
 ```
 
 
@@ -863,6 +960,16 @@ lingcod_south_model_comparison_table %>%
   kable_styling(latex_options = "HOLD_position")
 ```
 
+```{r lingcod_south_table}
+lingcod_south_null_rmse <- subset(lingcod_south_model_comparison_table, model == "null" & .metric == "rmse")$.estimate
+lingcod_south_model_comparison_table %>% 
+  filter(.metric == "rmse") %>% 
+  mutate(performance_v_null = round(.estimate/lingcod_south_null_rmse, 2)) %>% 
+  dplyr::select(model, performance_v_null) %>% 
+  kbl(caption = "RMSE of One-year-ahead predictive performance for Lingcod (South of 40°10'N), relative to null model.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+
+```
 
 ### Petrale Sole (2023 assessment)
 
@@ -888,6 +995,17 @@ petrale_sole_model_comparison_table <- bind_rows(petrale_sole_null_metrics,
 petrale_sole_model_comparison_table %>% 
   kbl(caption = "One-year-ahead predictive performance for Petrale Sole.") %>% 
   kable_styling(latex_options = "HOLD_position")
+```
+
+```{r petrale_sole_table}
+petrale_sole_null_rmse <- subset(petrale_sole_model_comparison_table, model == "null" & .metric == "rmse")$.estimate
+petrale_sole_model_comparison_table %>% 
+  filter(.metric == "rmse") %>% 
+  mutate(performance_v_null = round(.estimate/petrale_sole_null_rmse, 2)) %>% 
+  dplyr::select(model, performance_v_null) %>% 
+  kbl(caption = "RMSE of One-year-ahead predictive performance for Petrale Sole, relative to null model.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+
 ```
 
 ### Quillback Rockfish - California (2025 assessment)
@@ -916,6 +1034,17 @@ quillback_rf_ca_model_comparison_table %>%
   kable_styling(latex_options = "HOLD_position")
 ```
 
+```{r quillback_rf_ca_table}
+quillback_rf_ca_null_rmse <- subset(quillback_rf_ca_model_comparison_table, model == "null" & .metric == "rmse")$.estimate
+quillback_rf_ca_model_comparison_table %>% 
+  filter(.metric == "rmse") %>% 
+  mutate(performance_v_null = round(.estimate/quillback_rf_ca_null_rmse, 2)) %>% 
+  dplyr::select(model, performance_v_null) %>% 
+  kbl(caption = "RMSE of One-year-ahead predictive performance for Quillback Rockfish (CA), relative to null model.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+
+```
+
 ### Rex Sole (2023 assessment)
 
 ```{r rex_sole_ml, cache = TRUE}
@@ -942,6 +1071,17 @@ rex_sole_model_comparison_table %>%
   kable_styling(latex_options = "HOLD_position")
 ```
 
+```{r rex_sole_table}
+rex_sole_null_rmse <- subset(rex_sole_model_comparison_table, model == "null" & .metric == "rmse")$.estimate
+rex_sole_model_comparison_table %>% 
+  filter(.metric == "rmse") %>% 
+  mutate(performance_v_null = round(.estimate/rex_sole_null_rmse, 2)) %>% 
+  dplyr::select(model, performance_v_null) %>% 
+  kbl(caption = "RMSE of One-year-ahead predictive performance for Rex Sole, relative to null model.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+
+```
+
 ### Rougheye/Blackspotted Rockfish (2025 assessment)
 
 ```{r rougheye_rf_ml, cache = TRUE}
@@ -966,6 +1106,17 @@ rougheye_rf_model_comparison_table <- bind_rows(rougheye_rf_null_metrics,
 rougheye_rf_model_comparison_table %>% 
   kbl(caption = "One-year-ahead predictive performance for Rougheye/Blackspotted Rockfish") %>% 
   kable_styling(latex_options = "HOLD_position")
+```
+
+```{r rougheye_rf_table}
+rougheye_rf_null_rmse <- subset(rougheye_rf_model_comparison_table, model == "null" & .metric == "rmse")$.estimate
+rougheye_rf_model_comparison_table %>% 
+  filter(.metric == "rmse") %>% 
+  mutate(performance_v_null = round(.estimate/rougheye_rf_null_rmse, 2)) %>% 
+  dplyr::select(model, performance_v_null) %>% 
+  kbl(caption = "RMSE of One-year-ahead predictive performance for Rougheye/Blackspotted Rockfish, relative to null model.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+
 ```
 
 
@@ -995,6 +1146,17 @@ sablefish_model_comparison_table %>%
   kable_styling(latex_options = "HOLD_position")
 ```
 
+```{r sablefish_table}
+sablefish_null_rmse <- subset(sablefish_model_comparison_table, model == "null" & .metric == "rmse")$.estimate
+sablefish_model_comparison_table %>% 
+  filter(.metric == "rmse") %>% 
+  mutate(performance_v_null = round(.estimate/sablefish_null_rmse, 2)) %>% 
+  dplyr::select(model, performance_v_null) %>% 
+  kbl(caption = "RMSE of One-year-ahead predictive performance for Sablefish, relative to null model.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+
+```
+
 ### Vermilion & Sunset Rockfish - Southern CA (2021 assessment)
 
 ```{r vermilion_rf_sca_ml, cache = TRUE}
@@ -1019,6 +1181,17 @@ vermilion_rf_sca_model_comparison_table <- bind_rows(vermilion_rf_sca_null_metri
 vermilion_rf_sca_model_comparison_table %>% 
   kbl(caption = "One-year-ahead predictive performance for Vermilion & Sunset Rockfish (Southern CA).") %>% 
   kable_styling(latex_options = "HOLD_position")
+```
+
+```{r vermilion_rf_sca_table}
+vermilion_rf_sca_null_rmse <- subset(vermilion_rf_sca_model_comparison_table, model == "null" & .metric == "rmse")$.estimate
+vermilion_rf_sca_model_comparison_table %>% 
+  filter(.metric == "rmse") %>% 
+  mutate(performance_v_null = round(.estimate/vermilion_rf_sca_null_rmse, 2)) %>% 
+  dplyr::select(model, performance_v_null) %>% 
+  kbl(caption = "RMSE of One-year-ahead predictive performance for Vermilion & Sunset Rockfish (Southern CA), relative to null model.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+
 ```
 
 ### Vermilion & Sunset Rockfish - Northern CA (2021 assessment)
@@ -1047,6 +1220,17 @@ vermilion_rf_nca_model_comparison_table %>%
   kable_styling(latex_options = "HOLD_position")
 ```
 
+```{r vermilion_rf_nca_table}
+vermilion_rf_nca_null_rmse <- subset(vermilion_rf_nca_model_comparison_table, model == "null" & .metric == "rmse")$.estimate
+vermilion_rf_nca_model_comparison_table %>% 
+  filter(.metric == "rmse") %>% 
+  mutate(performance_v_null = round(.estimate/vermilion_rf_nca_null_rmse, 2)) %>% 
+  dplyr::select(model, performance_v_null) %>% 
+  kbl(caption = "RMSE of One-year-ahead predictive performance for Vermilion & Sunset Rockfish (Northern CA), relative to null model.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+
+```
+
 ### Vermilion Rockfish - Oregon (2021 assessment)
 
 ```{r vermilion_rf_or_ml, cache = TRUE}
@@ -1071,6 +1255,17 @@ vermilion_rf_or_model_comparison_table <- bind_rows(vermilion_rf_or_null_metrics
 vermilion_rf_or_model_comparison_table %>% 
   kbl(caption = "One-year-ahead predictive performance for Vermilion Rockfish (OR).") %>% 
   kable_styling(latex_options = "HOLD_position")
+```
+
+```{r vermilion_rf_or_table}
+vermilion_rf_or_null_rmse <- subset(vermilion_rf_or_model_comparison_table, model == "null" & .metric == "rmse")$.estimate
+vermilion_rf_or_model_comparison_table %>% 
+  filter(.metric == "rmse") %>% 
+  mutate(performance_v_null = round(.estimate/vermilion_rf_or_null_rmse, 2)) %>% 
+  dplyr::select(model, performance_v_null) %>% 
+  kbl(caption = "RMSE of One-year-ahead predictive performance for Vermilion Rockfish (OR), relative to null model.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+
 ```
 
 ### Vermilion Rockfish - Washington (2021 assessment)
@@ -1099,6 +1294,17 @@ vermilion_rf_wa_model_comparison_table %>%
   kable_styling(latex_options = "HOLD_position")
 ```
 
+```{r vermilion_rf_wa_table}
+vermilion_rf_wa_null_rmse <- subset(vermilion_rf_wa_model_comparison_table, model == "null" & .metric == "rmse")$.estimate
+vermilion_rf_wa_model_comparison_table %>% 
+  filter(.metric == "rmse") %>% 
+  mutate(performance_v_null = round(.estimate/vermilion_rf_wa_null_rmse, 2)) %>% 
+  dplyr::select(model, performance_v_null) %>% 
+  kbl(caption = "RMSE of One-year-ahead predictive performance for Vermilion Rockfish (WA), relative to null model.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+
+```
+
 ### Yellowtail Rockfish (2025 assessment)
 
 ```{r yellowtail_rf_ml, cache = TRUE}
@@ -1125,4 +1331,14 @@ yellowtail_rf_model_comparison_table %>%
   kable_styling(latex_options = "HOLD_position")
 ```
 
+```{r yellowtail_rf_table}
+yellowtail_null_rmse <- subset(yellowtail_rf_model_comparison_table, model == "null" & .metric == "rmse")$.estimate
+yellowtail_rf_model_comparison_table %>% 
+  filter(.metric == "rmse") %>% 
+  mutate(performance_v_null = round(.estimate/yellowtail_null_rmse, 2)) %>% 
+  dplyr::select(model, performance_v_null) %>% 
+  kbl(caption = "RMSE of One-year-ahead predictive performance for Yellowtail Rockfish, relative to null model.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+  
+```
 

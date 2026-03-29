@@ -1861,8 +1861,8 @@ border-radius: 0px;
 </div>
 
 
-<p>Coming soon - one-year-ahead predictive performance compared across
-all stocks using four models:</p>
+<p>One-year-ahead predictive performance compared across all stocks
+using four models:</p>
 <ol style="list-style-type: decimal">
 <li>Linear regression</li>
 <li>GAM</li>
@@ -2037,6 +2037,64 @@ nn(Value ~ bbv_PC4 + ild_PC1 + ild_PC2)
 </tr>
 </tbody>
 </table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+RMSE of One-year-ahead predictive performance for Black Rockfish
+(Northern CA), relative to null model.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+model
+</th>
+<th style="text-align:right;">
+performance_v_null
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+null
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lm(Value ~ ssh_PC1)
+</td>
+<td style="text-align:right;">
+1.37
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+gam(Value ~ ssh_PC1)
+</td>
+<td style="text-align:right;">
+1.37
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+random forest
+</td>
+<td style="text-align:right;">
+1.05
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nn(Value ~ bbv_PC4 + ild_PC1 + ild_PC2)
+</td>
+<td style="text-align:right;">
+65.42
+</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div id="black-rockfish---central-ca-2023-assessment" class="section level3">
 <h3>Black Rockfish - Central CA (2023 assessment)</h3>
@@ -2199,6 +2257,64 @@ standard
 </td>
 <td style="text-align:left;">
 nn(Value ~ ssh_PC2 + sst_PC1 + sst_PC2)
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+RMSE of One-year-ahead predictive performance for Black Rockfish
+(Central CA), relative to null model.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+model
+</th>
+<th style="text-align:right;">
+performance_v_null
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+null
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lm(Value ~ bbv_PC3)
+</td>
+<td style="text-align:right;">
+1.10
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+gam(Value ~ bbv_PC3)
+</td>
+<td style="text-align:right;">
+1.07
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+random forest
+</td>
+<td style="text-align:right;">
+1.01
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nn(Value ~ ssh_PC2 + sst_PC1 + sst_PC2)
+</td>
+<td style="text-align:right;">
+2.06
 </td>
 </tr>
 </tbody>
@@ -2369,6 +2485,64 @@ nn(Value ~ bbv_PC1 + bbv_PC2 + bbv_PC3)
 </tr>
 </tbody>
 </table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+RMSE of One-year-ahead predictive performance for Black Rockfish (OR),
+relative to null model.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+model
+</th>
+<th style="text-align:right;">
+performance_v_null
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+null
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lm(Value ~ ssh_PC1)
+</td>
+<td style="text-align:right;">
+0.95
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+gam(Value ~ ssh_PC1)
+</td>
+<td style="text-align:right;">
+0.95
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+random forest
+</td>
+<td style="text-align:right;">
+0.87
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nn(Value ~ bbv_PC1 + bbv_PC2 + bbv_PC3)
+</td>
+<td style="text-align:right;">
+3.37
+</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div id="black-rockfish---washington-2023-assessment" class="section level3">
 <h3>Black Rockfish - Washington (2023 assessment)</h3>
@@ -2535,6 +2709,64 @@ nn(Value ~ bbv_PC3 + bbv_PC4 + ild_PC1)
 </tr>
 </tbody>
 </table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+RMSE of One-year-ahead predictive performance for Black Rockfish (OR),
+relative to null model.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+model
+</th>
+<th style="text-align:right;">
+performance_v_null
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+null
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lm(Value ~ ild_PC1)
+</td>
+<td style="text-align:right;">
+0.84
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+gam(Value ~ ild_PC1)
+</td>
+<td style="text-align:right;">
+0.84
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+random forest
+</td>
+<td style="text-align:right;">
+0.92
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nn(Value ~ bbv_PC3 + bbv_PC4 + ild_PC1)
+</td>
+<td style="text-align:right;">
+1.05
+</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div id="canary-rockfish-2023-assessment" class="section level3">
 <h3>Canary Rockfish (2023 assessment)</h3>
@@ -2697,6 +2929,64 @@ standard
 </td>
 <td style="text-align:left;">
 nn(Value ~ sst_PC3 + BEUTI_north + BEUTI_central)
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+RMSE of One-year-ahead predictive performance for Black Rockfish (OR),
+relative to null model.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+model
+</th>
+<th style="text-align:right;">
+performance_v_null
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+null
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lm(Value ~ ild_PC1)
+</td>
+<td style="text-align:right;">
+1.53
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+gam(Value ~ ild_PC1)
+</td>
+<td style="text-align:right;">
+1.53
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+random forest
+</td>
+<td style="text-align:right;">
+1.22
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nn(Value ~ sst_PC3 + BEUTI_north + BEUTI_central)
+</td>
+<td style="text-align:right;">
+2.94
 </td>
 </tr>
 </tbody>
@@ -2868,6 +3158,64 @@ nn(Value ~ sst_PC2 + sst_PC3 + BEUTI_north)
 </tr>
 </tbody>
 </table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+RMSE of One-year-ahead predictive performance for Copper Rockfish
+(Northern CA), relative to null model.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+model
+</th>
+<th style="text-align:right;">
+performance_v_null
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+null
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lm(Value ~ sst_PC2)
+</td>
+<td style="text-align:right;">
+1.41
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+gam(Value ~ sst_PC2)
+</td>
+<td style="text-align:right;">
+1.41
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+random forest
+</td>
+<td style="text-align:right;">
+0.93
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nn(Value ~ sst_PC2 + sst_PC3 + BEUTI_north)
+</td>
+<td style="text-align:right;">
+1.21
+</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div id="copper-rockfish---ca-south-of-point-conception-2023-assessment" class="section level3">
 <h3>Copper Rockfish - CA, South of Point Conception (2023
@@ -3031,6 +3379,64 @@ standard
 </td>
 <td style="text-align:left;">
 nn(Value ~ ild_PC3 + ssh_PC1 + ssh_PC2)
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+RMSE of One-year-ahead predictive performance for Copper Rockfish
+(Southern CA), relative to null model.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+model
+</th>
+<th style="text-align:right;">
+performance_v_null
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+null
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lm(Value ~ ild_PC3)
+</td>
+<td style="text-align:right;">
+1.09
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+gam(Value ~ sst_PC1)
+</td>
+<td style="text-align:right;">
+0.81
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+random forest
+</td>
+<td style="text-align:right;">
+0.96
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nn(Value ~ ild_PC3 + ssh_PC1 + ssh_PC2)
+</td>
+<td style="text-align:right;">
+1.01
 </td>
 </tr>
 </tbody>
@@ -3201,6 +3607,64 @@ nn(Value ~ bbv_PC2 + bbv_PC3 + bbv_PC4)
 </tr>
 </tbody>
 </table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+RMSE of One-year-ahead predictive performance for Dover Sole, relative
+to null model.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+model
+</th>
+<th style="text-align:right;">
+performance_v_null
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+null
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lm(Value ~ bbv_PC3)
+</td>
+<td style="text-align:right;">
+1.59
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+gam(Value ~ bbv_PC3)
+</td>
+<td style="text-align:right;">
+1.59
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+random forest
+</td>
+<td style="text-align:right;">
+1.14
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nn(Value ~ bbv_PC2 + bbv_PC3 + bbv_PC4)
+</td>
+<td style="text-align:right;">
+2.15
+</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div id="lingcod---north-of-4010n-2021-assessment" class="section level3">
 <h3>Lingcod - North of 40°10’N (2021 assessment)</h3>
@@ -3363,6 +3827,64 @@ standard
 </td>
 <td style="text-align:left;">
 nn(Value ~ sst_PC3 + BEUTI_north + BEUTI_central)
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+RMSE of One-year-ahead predictive performance for Lingcod (North of
+40°10’N), relative to null model.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+model
+</th>
+<th style="text-align:right;">
+performance_v_null
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+null
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lm(Value ~ ssh_PC1)
+</td>
+<td style="text-align:right;">
+1.10
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+gam(Value ~ bbv_PC1)
+</td>
+<td style="text-align:right;">
+1.06
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+random forest
+</td>
+<td style="text-align:right;">
+0.92
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nn(Value ~ sst_PC3 + BEUTI_north + BEUTI_central)
+</td>
+<td style="text-align:right;">
+1.94
 </td>
 </tr>
 </tbody>
@@ -3533,6 +4055,64 @@ nn(Value ~ ild_PC3 + ssh_PC1 + ssh_PC2)
 </tr>
 </tbody>
 </table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+RMSE of One-year-ahead predictive performance for Lingcod (South of
+40°10’N), relative to null model.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+model
+</th>
+<th style="text-align:right;">
+performance_v_null
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+null
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lm(Value ~ sst_PC1)
+</td>
+<td style="text-align:right;">
+0.87
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+gam(Value ~ bbv_PC4)
+</td>
+<td style="text-align:right;">
+1.13
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+random forest
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nn(Value ~ ild_PC3 + ssh_PC1 + ssh_PC2)
+</td>
+<td style="text-align:right;">
+1.25
+</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div id="petrale-sole-2023-assessment" class="section level3">
 <h3>Petrale Sole (2023 assessment)</h3>
@@ -3695,6 +4275,64 @@ standard
 </td>
 <td style="text-align:left;">
 nn(Value ~ ssh_PC1 + ssh_PC2 + sst_PC1)
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+RMSE of One-year-ahead predictive performance for Petrale Sole, relative
+to null model.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+model
+</th>
+<th style="text-align:right;">
+performance_v_null
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+null
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lm(Value ~ ild_PC1)
+</td>
+<td style="text-align:right;">
+0.68
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+gam(Value ~ ild_PC1)
+</td>
+<td style="text-align:right;">
+0.68
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+random forest
+</td>
+<td style="text-align:right;">
+1.04
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nn(Value ~ ssh_PC1 + ssh_PC2 + sst_PC1)
+</td>
+<td style="text-align:right;">
+1.25
 </td>
 </tr>
 </tbody>
@@ -3865,6 +4503,64 @@ nn(Value ~ sst_PC1 + sst_PC2 + sst_PC3)
 </tr>
 </tbody>
 </table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+RMSE of One-year-ahead predictive performance for Quillback Rockfish
+(CA), relative to null model.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+model
+</th>
+<th style="text-align:right;">
+performance_v_null
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+null
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lm(Value ~ sst_PC1)
+</td>
+<td style="text-align:right;">
+1.09
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+gam(Value ~ sst_PC1)
+</td>
+<td style="text-align:right;">
+1.12
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+random forest
+</td>
+<td style="text-align:right;">
+1.07
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nn(Value ~ sst_PC1 + sst_PC2 + sst_PC3)
+</td>
+<td style="text-align:right;">
+1.15
+</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div id="rex-sole-2023-assessment" class="section level3">
 <h3>Rex Sole (2023 assessment)</h3>
@@ -4027,6 +4723,64 @@ standard
 </td>
 <td style="text-align:left;">
 nn(Value ~ bbv_PC4 + ild_PC1 + ild_PC2)
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+RMSE of One-year-ahead predictive performance for Rex Sole, relative to
+null model.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+model
+</th>
+<th style="text-align:right;">
+performance_v_null
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+null
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lm(Value ~ ild_PC3)
+</td>
+<td style="text-align:right;">
+1.13
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+gam(Value ~ ild_PC3)
+</td>
+<td style="text-align:right;">
+1.13
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+random forest
+</td>
+<td style="text-align:right;">
+1.08
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nn(Value ~ bbv_PC4 + ild_PC1 + ild_PC2)
+</td>
+<td style="text-align:right;">
+2.19
 </td>
 </tr>
 </tbody>
@@ -4197,6 +4951,64 @@ nn(Value ~ ssh_PC1 + ssh_PC2 + sst_PC1)
 </tr>
 </tbody>
 </table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+RMSE of One-year-ahead predictive performance for Rougheye/Blackspotted
+Rockfish, relative to null model.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+model
+</th>
+<th style="text-align:right;">
+performance_v_null
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+null
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lm(Value ~ sst_PC1)
+</td>
+<td style="text-align:right;">
+0.97
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+gam(Value ~ sst_PC1)
+</td>
+<td style="text-align:right;">
+0.97
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+random forest
+</td>
+<td style="text-align:right;">
+1.01
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nn(Value ~ ssh_PC1 + ssh_PC2 + sst_PC1)
+</td>
+<td style="text-align:right;">
+1.35
+</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div id="sablefish-2025-assessment" class="section level3">
 <h3>Sablefish (2025 assessment)</h3>
@@ -4359,6 +5171,64 @@ NA
 </td>
 <td style="text-align:left;">
 nn(Value ~ bbv_PC1 + bbv_PC2 + bbv_PC3)
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+RMSE of One-year-ahead predictive performance for Sablefish, relative to
+null model.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+model
+</th>
+<th style="text-align:right;">
+performance_v_null
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+null
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lm(Value ~ sst_PC1)
+</td>
+<td style="text-align:right;">
+1.11
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+gam(Value ~ sst_PC1)
+</td>
+<td style="text-align:right;">
+1.11
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+random forest
+</td>
+<td style="text-align:right;">
+1.27
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nn(Value ~ bbv_PC1 + bbv_PC2 + bbv_PC3)
+</td>
+<td style="text-align:right;">
+0.78
 </td>
 </tr>
 </tbody>
@@ -4530,6 +5400,64 @@ nn(Value ~ bbv_PC1 + bbv_PC2 + bbv_PC3)
 </tr>
 </tbody>
 </table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+RMSE of One-year-ahead predictive performance for Vermilion &amp; Sunset
+Rockfish (Southern CA), relative to null model.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+model
+</th>
+<th style="text-align:right;">
+performance_v_null
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+null
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lm(Value ~ bbv_PC4)
+</td>
+<td style="text-align:right;">
+1.28
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+gam(Value ~ bbv_PC4)
+</td>
+<td style="text-align:right;">
+1.28
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+random forest
+</td>
+<td style="text-align:right;">
+1.08
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nn(Value ~ bbv_PC1 + bbv_PC2 + bbv_PC3)
+</td>
+<td style="text-align:right;">
+0.67
+</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div id="vermilion-sunset-rockfish---northern-ca-2021-assessment" class="section level3">
 <h3>Vermilion &amp; Sunset Rockfish - Northern CA (2021 assessment)</h3>
@@ -4693,6 +5621,64 @@ standard
 </td>
 <td style="text-align:left;">
 nn(Value ~ ssh_PC2 + sst_PC1 + sst_PC2)
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+RMSE of One-year-ahead predictive performance for Vermilion &amp; Sunset
+Rockfish (Northern CA), relative to null model.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+model
+</th>
+<th style="text-align:right;">
+performance_v_null
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+null
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lm(Value ~ sst_PC3)
+</td>
+<td style="text-align:right;">
+0.98
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+gam(Value ~ ssh_PC2)
+</td>
+<td style="text-align:right;">
+0.84
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+random forest
+</td>
+<td style="text-align:right;">
+0.94
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nn(Value ~ ssh_PC2 + sst_PC1 + sst_PC2)
+</td>
+<td style="text-align:right;">
+1.71
 </td>
 </tr>
 </tbody>
@@ -4863,6 +5849,64 @@ nn(Value ~ bbv_PC2 + bbv_PC3 + bbv_PC4)
 </tr>
 </tbody>
 </table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+RMSE of One-year-ahead predictive performance for Vermilion Rockfish
+(OR), relative to null model.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+model
+</th>
+<th style="text-align:right;">
+performance_v_null
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+null
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lm(Value ~ BEUTI_north)
+</td>
+<td style="text-align:right;">
+1.26
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+gam(Value ~ bbv_PC2)
+</td>
+<td style="text-align:right;">
+1.16
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+random forest
+</td>
+<td style="text-align:right;">
+0.70
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nn(Value ~ bbv_PC2 + bbv_PC3 + bbv_PC4)
+</td>
+<td style="text-align:right;">
+1.34
+</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div id="vermilion-rockfish---washington-2021-assessment" class="section level3">
 <h3>Vermilion Rockfish - Washington (2021 assessment)</h3>
@@ -5029,6 +6073,64 @@ nn(Value ~ bbv_PC2 + bbv_PC3 + bbv_PC4)
 </tr>
 </tbody>
 </table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+RMSE of One-year-ahead predictive performance for Vermilion Rockfish
+(WA), relative to null model.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+model
+</th>
+<th style="text-align:right;">
+performance_v_null
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+null
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lm(Value ~ bbv_PC2)
+</td>
+<td style="text-align:right;">
+1.07
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+gam(Value ~ bbv_PC4)
+</td>
+<td style="text-align:right;">
+1.03
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+random forest
+</td>
+<td style="text-align:right;">
+1.23
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nn(Value ~ bbv_PC2 + bbv_PC3 + bbv_PC4)
+</td>
+<td style="text-align:right;">
+7.51
+</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div id="yellowtail-rockfish-2025-assessment" class="section level3">
 <h3>Yellowtail Rockfish (2025 assessment)</h3>
@@ -5191,6 +6293,64 @@ standard
 </td>
 <td style="text-align:left;">
 nn(Value ~ bbv_PC3 + bbv_PC4 + ild_PC1)
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+RMSE of One-year-ahead predictive performance for Yellowtail Rockfish,
+relative to null model.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+model
+</th>
+<th style="text-align:right;">
+performance_v_null
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+null
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lm(Value ~ ild_PC3)
+</td>
+<td style="text-align:right;">
+1.36
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+gam(Value ~ ild_PC3)
+</td>
+<td style="text-align:right;">
+1.36
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+random forest
+</td>
+<td style="text-align:right;">
+1.14
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nn(Value ~ bbv_PC3 + bbv_PC4 + ild_PC1)
+</td>
+<td style="text-align:right;">
+1.30
 </td>
 </tr>
 </tbody>
