@@ -50,25 +50,25 @@ While the two upwelling indices, CUTI and BEUTI, are averaged across the three b
 
 The time series of these significant principal components are visualized below:
 
-![Significant principal components from the SSH, SST, ILD, and BV spatial fields from ROMS.](../figures/feature_extraction/features_ts_plot.png)
+![Significant principal components from the SSH, SST, ILD, and BV spatial fields from ROMS.](figures/feature_extraction/features_ts_plot.png)
 
 <br>
 
 The loadings of the spatial fields on the principal components are visualized below:
 
-![Loadings of the spatial fields on the principal components of BV.](../figures/feature_extraction/bbv_eof_loadings_plot.png)
+![Loadings of the spatial fields on the principal components of BV.](figures/feature_extraction/bbv_eof_loadings_plot.png)
 
 <br>
 
-![Loadings of the spatial fields on the principal components of ILD.](../figures/feature_extraction/ild_eof_loadings_plot.png)
+![Loadings of the spatial fields on the principal components of ILD.](figures/feature_extraction/ild_eof_loadings_plot.png)
 
 <br>
 
-![Loadings of the spatial fields on the principal components of SSH.](../figures/feature_extraction/ssh_eof_loadings_plot.png)
+![Loadings of the spatial fields on the principal components of SSH.](figures/feature_extraction/ssh_eof_loadings_plot.png)
 
 <br>
 
-![Loadings of the spatial fields on the principal components of SST.](../figures/feature_extraction/sst_eof_loadings_plot.png)
+![Loadings of the spatial fields on the principal components of SST.](figures/feature_extraction/sst_eof_loadings_plot.png)
 
 <br>
 

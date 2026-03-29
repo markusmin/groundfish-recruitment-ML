@@ -14,7 +14,7 @@ Coming soon - one-year-ahead predictive performance compared across all stocks u
 4. Neural networks
 
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
-knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, eval = FALSE)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 ```
 
 ```{r load_data_functions}
@@ -563,6 +563,9 @@ fit_nn <- function(data, assessment_resamples){
     # set_engine("brulee", validation = 0) %>% 
     set_engine("nnet") %>% 
     set_mode("regression")
+  
+  # Set up the recipe (same as before)
+  nn_recipe <- recipe(nn_last_f, data = subset(data, !(Yr %in% last_10_yrs)))
   
   nn_workflow <- nn_recipe %>% 
     workflow(nn_spec)

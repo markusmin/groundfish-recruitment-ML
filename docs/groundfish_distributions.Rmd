@@ -8,7 +8,7 @@ output:
 
 This plot shows the latitudinal centroid of the distribution of each of the species:
 
-![Latitudinal centroid of each species. Note that the longitudinal centroid is not shown, as for many species this is on land.](../figures/trawl_survey/centroids_map.png){width=100%}
+![Latitudinal centroid of each species. Note that the longitudinal centroid is not shown, as for many species this is on land.](figures/trawl_survey/centroids_map.png){width=100%}
 
 
 ## CPUE Maps {.tabset .tabset-pills}
@@ -16,49 +16,49 @@ This plot shows the latitudinal centroid of the distribution of each of the spec
 
 ### Black Rockfish
 
-![CPUE map for Black Rockfish.](../figures/trawl_survey/black_rf_allyears_cpue_map.png){width=100%}
+![CPUE map for Black Rockfish.](figures/trawl_survey/black_rf_allyears_cpue_map.png){width=100%}
 
 ### Canary Rockfish
 
-![CPUE map for Canary Rockfish.](../figures/trawl_survey/canary_rf_allyears_cpue_map.png){width=100%}
+![CPUE map for Canary Rockfish.](figures/trawl_survey/canary_rf_allyears_cpue_map.png){width=100%}
 
 ### Copper Rockfish 
 
-![CPUE map for Copper Rockfish.](../figures/trawl_survey/copper_rf_allyears_cpue_map.png){width=100%}
+![CPUE map for Copper Rockfish.](figures/trawl_survey/copper_rf_allyears_cpue_map.png){width=100%}
 
 ### Dover Sole 
 
-![CPUE map for Dover Sole.](../figures/trawl_survey/dover_sole_allyears_cpue_map.png){width=100%}
+![CPUE map for Dover Sole.](figures/trawl_survey/dover_sole_allyears_cpue_map.png){width=100%}
 
 ### Lingcod 
 
-![CPUE map for Lingcod.](../figures/trawl_survey/lingcod_allyears_cpue_map.png){width=100%}
+![CPUE map for Lingcod.](figures/trawl_survey/lingcod_allyears_cpue_map.png){width=100%}
 
 ### Petrale Sole 
 
-![CPUE map for Petrale Sole.](../figures/trawl_survey/petrale_sole_allyears_cpue_map.png){width=100%}
+![CPUE map for Petrale Sole.](figures/trawl_survey/petrale_sole_allyears_cpue_map.png){width=100%}
 
 ### Quillback Rockfish 
 
-![CPUE map for Quillback Rockfish.](../figures/trawl_survey/quillback_rf_allyears_cpue_map.png){width=100%}
+![CPUE map for Quillback Rockfish.](figures/trawl_survey/quillback_rf_allyears_cpue_map.png){width=100%}
 
 ### Rex Sole 
 
-![CPUE map for Rex Sole.](../figures/trawl_survey/rex_sole_allyears_cpue_map.png){width=100%}
+![CPUE map for Rex Sole.](figures/trawl_survey/rex_sole_allyears_cpue_map.png){width=100%}
 
 ### Rougheye/Blackspotted Rockfish 
 
-![CPUE map for Rougheye/Blackspotted Rockfish.](../figures/trawl_survey/rougheye_rf_allyears_cpue_map.png){width=100%}
+![CPUE map for Rougheye/Blackspotted Rockfish.](figures/trawl_survey/rougheye_rf_allyears_cpue_map.png){width=100%}
 
 ### Sablefish
 
-![CPUE map for Sablefish.](../figures/trawl_survey/sablefish_allyears_cpue_map.png){width=100%}
+![CPUE map for Sablefish.](figures/trawl_survey/sablefish_allyears_cpue_map.png){width=100%}
 
 ### Vermilion & Sunset Rockfish
 
-![CPUE map for Vermilion & Sunset  Rockfish.](../figures/trawl_survey/vermilion_rf_allyears_cpue_map.png){width=100%}
+![CPUE map for Vermilion & Sunset  Rockfish.](figures/trawl_survey/vermilion_rf_allyears_cpue_map.png){width=100%}
 
 ### Yellowtail Rockfish 
 
-![CPUE map for Yellowtail Rockfish.](../figures/trawl_survey/yellowtail_rf_allyears_cpue_map.png){width=100%}
+![CPUE map for Yellowtail Rockfish.](figures/trawl_survey/yellowtail_rf_allyears_cpue_map.png){width=100%}
 
