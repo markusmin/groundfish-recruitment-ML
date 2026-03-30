@@ -13,7 +13,26 @@ One-year-ahead predictive performance compared across all stocks using four mode
 3. Random forest
 4. Neural networks
 
+<br>
 
+Notably, the neural models were usually the worst performing model. The only exception were the Sablefish and Vermilion & Sunset Rockfish (Southern CA) models, where the neural network was the only model that had any predictive skill.
+
+<br>
+
+Models for the following stocks had some predictive skill (RMSE < RMSE of the null model) - models that outperformed the null model are listed after the stock:
+
+- Black Rockfish (OR) - lm, gam, rf
+- Black Rockfish (WA) - lm, gam, rf
+- Copper Rockfish (Northern CA) - rf
+- Copper Rockfish (Southern CA) - gam, rf
+- Lingcod (North) - rf
+- Lingcod (South) - lm
+- Petrale Sole - lm, gam
+- Rougheye/Blackspotted Rockfish - lm, gam
+- Sablefish - NN
+- Vermilion & Sunset Rockfish (Southern CA) - NN
+- Vermilion & Sunset Rockfish (Northern CA) - lm, gam, rf
+- Vermilion Rockfish (OR) - rf
 
 
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
