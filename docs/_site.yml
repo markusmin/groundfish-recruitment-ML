@@ -19,7 +19,7 @@ navbar:
         href: ml_predictions.html   
       - text: "Groundfish distribution centroids"
         href: groundfish_distributions.html   
-      - text: "Trawl Survey Indices"
+      - text: "Trawl Survey Juvenile Distributions"
         href: trawl_survey_indices.html   
 output:
   html_document:

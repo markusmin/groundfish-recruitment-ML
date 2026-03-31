@@ -14,10 +14,15 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 
 ## Predictor variables
 
-The predictor variables used in this analysis are outputs from the (UCSC ROMS model)[https://www.cencoos.org/observations/models-forecasts/] [@Neveu2016. The UCSC ROMS model extends from 1980-2022, and is the model that has been used for numerous recruitment studies on the west coast, including @Ward2024, which explored different approaches for forecasting groundfish recruitment. However, this model is not being consistently updated, and consists of multiple oceanographic models stitched together (specifically, a 1980-2010 re-analysis, and a 2011-2022 near-real-time model). 
+The predictor variables used in this analysis are outputs from the (UCSC ROMS model)[https://www.cencoos.org/observations/models-forecasts/]. The UCSC ROMS model extends from 1980-2022, and is the model that has been used for numerous recruitment studies on the west coast, including @Ward2024, which explored different approaches for forecasting groundfish recruitment. However, this model is not being consistently updated, and consists of multiple oceanographic models stitched together (specifically, a 1980-2010 re-analysis, and a 2011-2022 near-real-time model). We will revisit the consequences of these two models being stitched together later.
 
+<br>
 
 ## Initial suite of predictor variables
+
+A description of the variables extracted from ROMS and their potential pathways to affect recruitment follows.
+
+<br>
 
 #### ROMS: Sea surface temperature (SST)
 
@@ -43,33 +48,68 @@ CUTI provides estimates of vertical transport near the coast (i.e., upwelling/do
 
 BEUTI provides estimates of vertical nitrate flux near the coast (i.e., the amount of nitrate upwelled/downwelled), which may be more relevant than upwelling strength when considering some biological responses. This index is available in one-degree latitudinal bands along the U.S. West Coast.
 
+<br>
+<br>
 
-## Processing ROMS outputs
+## EOF on ROMS outputs
 
 While the two upwelling indices, CUTI and BEUTI, are averaged across the three biogeographic provinces of the California Current (North/Central/South), the other variables (SSH, SST, BV, and ILD) are composed of monthly spatial fields at a 10 km grid cell resolution. For this preliminary analysis, a PCA was run on these fields, subset to within 100 km of the coast, and significant predictors according to Horn's parallel analysis test extracted.
 
-The time series of these significant principal components are visualized below:
+The time series of these significant principal components are visualized below, with the red dashed line showing the transition from the re-analysis to the near-real-time oceanographic model:
 
-![Significant principal components from the SSH, SST, ILD, and BV spatial fields from ROMS.](figures/feature_extraction/features_ts_plot.png)
+![Significant principal components from the SSH, SST, ILD, and BV spatial fields from ROMS, with the red dashed line showing the transition from the re-analysis to the near-real-time oceanographic model.](figures/feature_extraction/features_ts_plot.png)
 
 <br>
 
-The loadings of the spatial fields on the principal components are visualized below:
+### Loadings of the spatial fields on the principal components {.tabset .tabset-pills}
+
+Here, the first four principal components are shown for each oceanographic variable, and noted whether or not these principal components are significant.
+
+#### Brunt Väisälä frequency (BV)
 
 ![Loadings of the spatial fields on the principal components of BV.](figures/feature_extraction/bbv_eof_loadings_plot.png)
 
-<br>
+#### Isothermal layer depth (ILD)
 
 ![Loadings of the spatial fields on the principal components of ILD.](figures/feature_extraction/ild_eof_loadings_plot.png)
 
-<br>
+#### Sea surface height
 
 ![Loadings of the spatial fields on the principal components of SSH.](figures/feature_extraction/ssh_eof_loadings_plot.png)
 
-<br>
+#### Sea surface temperature
 
 ![Loadings of the spatial fields on the principal components of SST.](figures/feature_extraction/sst_eof_loadings_plot.png)
 
+<br>
+<br>
+
+<br>
+<br>
+
+
+### ROMS: Re-analysis (1980-2010) + near-real-time (2011-2022) model comparisons {.tabset .tabset-pills}
+
+Here, I show the patterns captured by each of the first four principal components when the EOF is run on the re-analysis vs. the near-real-time product.
+
+#### Brunt Väisälä frequency (BV)
+
+![Loadings of the spatial fields on the principal components of BV for the two models.](figures/feature_extraction/comp_plots/bbv_comp_plot.png)
+
+#### Isothermal layer depth (ILD)
+
+![Loadings of the spatial fields on the principal components of ILD for the two models.](figures/feature_extraction/comp_plots/ild_comp_plot.png)
+
+#### Sea surface height
+
+![Loadings of the spatial fields on the principal components of SSH for the two models.](figures/feature_extraction/comp_plots/ssh_comp_plot.png)
+
+#### Sea surface temperature
+
+![Loadings of the spatial fields on the principal components of SST for the two models.](figures/feature_extraction/comp_plots/sst_comp_plot.png)
+
+<br>
+<br>
 <br>
 
 ## References
