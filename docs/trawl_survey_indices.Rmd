@@ -1,12 +1,15 @@
 ---
-title: "Trawl Survey Juvenile Distributions"
+title: "Trawl Survey Distributions"
 author: "Markus Min"
 date: "`r Sys.Date()`"
 output:
   html_document
 ---
 
-The juvenile stages of some stocks are well surveyed by the West Coast Groundfish Bottom Trawl Survey. Here, I show age-0 and age-1 Sablefish caught in the survey, and their correlation with the recruitment estimates from the stock assessment.
+The juvenile stages of some stocks are well surveyed by the West Coast Groundfish Bottom Trawl Survey. Here, I show a number of different age and length classes for Sablefish caught in the survey, as well as the correlation between the age-0 and age-1 fish caught in the survey and the recruitment estimates from the stock assessment. For the age and length compositions, I show the estimated fish of each age and length class in the survey, based on the extrapolation of the age and length sub-samples of each tow to the full number of fish caught in that tow. Note that this has typically been 20 lengths per tow and 4 ages per tow, and therefore the extrapolation is based on a much larger sample size for lengths.
+
+Below, I show age-0 and age-1 fish to show the distribution of recent recruits, and age-7+ fish for the distribution of potential spawners (age at 50% maturity was estimated to be 6.86 years in Head et al. 2014). I also show the length-based estimates for age-0 recruits (<=29 cm) and for spawners (>= 55cm, again based on the L50 estimated in Head et al. 2014).
+
 
 Note that these age-0 and age-1 fish are included in the stock assessment, which means that they do inform the estimate of recruitment. The age-0 and age-1 fish could be used as either our estimates of recruitment, or be included as a predictor for recruitment (but note that this becomes problematic because they are already informing the estimate of recruitment).
 
@@ -20,8 +23,16 @@ Note that these age-0 and age-1 fish are included in the stock assessment, which
 
 <br>
 
+![Sablefish <= 29 cm caught by the WCGBTS, based on the expansion of sampled age/length compositions to the full catch of each tow. This is the length cutoff generally accepted for age-0 Sablefish, although some years (2022) with exceptionally high juvenile Sablefish density show stunted growth as the likely result of density-dependence, meaning that this may not be reliable for 2022.](figures/trawl_survey/sablefish/sablefish_29cm_plot.png){width=100%}
+
+<br>
+
 ![Recruitment deviations from the stock assessment vs. the total number of age-0 fish caught in the WCGBTS.](figures/trawl_survey/sablefish/sablefish_age0_v_rec_plot.png){width=100%}
 
 <br>
 
 ![Recruitment deviations from the stock assessment vs. the total number of age-1 fish caught in the WCGBTS.](figures/trawl_survey/sablefish/sablefish_age1_v_rec_plot.png){width=100%}
+
+<br>
+
+![Sablefish >= 55 cm caught by the WCGBTS, based on the expansion of sampled age/length compositions to the full catch of each tow. 55 cm is the L50 for this species.](figures/trawl_survey/sablefish/sablefish_55cm_plot.png){width=100%}
