@@ -6,7 +6,11 @@ output:
   html_document
 ---
 
-First, the time series of recruitment for each stock is shown, using the boom/bust/average classification. Then, common boom/bust years are identified and visualized on the same PCA of the 14 predictor time series.
+First, the time series of recruitment for all stocks is shown, using the boom/bust/average classification, to quickly visualize synchrony.
+
+Next, I evaluated synchrony between each pair of stocks using Spearman rank correlation. Significance for these pairwise correlations is evaluated using a t-test, where the sample size used in the calculation is the effective sample size based on the degree of autocorrelation in each time series. An adjusted p-value using the Benjamini-Hochberg False Discovery Rate correction is also presented, given that we are testing 190 different pairwise correlations across our 20 stocks.
+
+Finally, common boom/bust years are identified and visualized on the same PCA of the 14 predictor time series.
 
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.height = 8, fig.width = 8)
@@ -15,6 +19,7 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.height
 ```{r load_data_functions}
 library(here)
 library(kableExtra)
+library(corrplot)
 source(here::here("R", "functions", "load_reformat_data.R"))
 ```
 
@@ -55,7 +60,97 @@ ggplot(recdevs_all_long, aes(x = Yr, y = stock, fill = one_sd_boom_bust)) +
   scale_fill_manual(values  = recr_cat_colors, name = "Boom/Bust\nRecruitment") +
   scale_y_discrete(limits = rev) +
   theme_minimal()
+
+### Look into Spearman (rank) correlation
+# step 1: pivot wider
+recdevs_all_long %>% 
+  dplyr::select(-one_sd_boom_bust) %>% 
+  pivot_wider(names_from = stock, values_from = Value) %>%
+  arrange(Yr) %>%
+  column_to_rownames("Yr") -> recdevs_wide
+
+# step 2: define ESS helper function
+n_eff_pair <- function(x, y) {
+  n   <- length(x)
+  r1x <- cor(x[-n], x[-1], use = "complete.obs")
+  r1y <- cor(y[-n], y[-1], use = "complete.obs")
+  n_eff <- n * (1 - r1x * r1y) / (1 + r1x * r1y)
+  max(4, floor(n_eff))
+}
+
+# step 3: run spearman correlation for each pair of species
+sp_pairs <- combn(colnames(recdevs_wide), 2, simplify = FALSE)
+
+results <- map_dfr(sp_pairs, function(pair) {
+  x    <- recdevs_wide[[pair[1]]]
+  y    <- recdevs_wide[[pair[2]]]
   
+  # Use only years where both species have data
+  complete <- complete.cases(x, y)
+  x <- x[complete]
+  y <- y[complete]
+  
+  rho   <- cor(x, y, method = "spearman")
+  neff  <- n_eff_pair(rank(x), rank(y))
+  tstat <- rho * sqrt((neff - 2) / (1 - rho^2))
+  pval  <- 2 * pt(-abs(tstat), df = neff - 2)
+  tibble(sp1 = pair[1], sp2 = pair[2], rho = rho, n_eff = neff, p_raw = pval)
+})
+
+# step 4: get adjusted p-values
+results <- results %>%
+  mutate(p_adj = p.adjust(p_raw, method = "BH"),
+         sig   = p_adj < 0.05)
+
+# run it again un-corrected
+results <- results %>%
+  mutate(sig   = p_raw < 0.05)
+
+# step 5: get symmetric matrices for corrplot
+rho_matrix <- matrix(0, ncol(recdevs_wide), ncol(recdevs_wide),
+                     dimnames = list(colnames(recdevs_wide), colnames(recdevs_wide)))
+diag(rho_matrix) <- 1
+
+sig_matrix <- matrix(TRUE, ncol(recdevs_wide), ncol(recdevs_wide),
+                     dimnames = list(colnames(recdevs_wide), colnames(recdevs_wide)))
+diag(sig_matrix) <- FALSE
+
+for (i in seq_len(nrow(results))) {
+  s1 <- results$sp1[i]; s2 <- results$sp2[i]
+  rho_matrix[s1, s2] <- rho_matrix[s2, s1] <- results$rho[i]
+  sig_matrix[s1, s2] <- sig_matrix[s2, s1] <- !results$sig[i]
+}
+
+# step 6: visualize correlogram
+corrplot(rho_matrix,
+         method    = "color",
+         type      = "upper",
+         p.mat     = sig_matrix,
+         sig.level = 0.05,
+         insig     = "pch",
+         pch       = 4,
+         pch.cex   = 1.2,
+         tl.cex    = 0.6,      # reduced slightly for longer species names
+         tl.srt    = 45,       # rotate labels to avoid overlap
+         col       = colorRampPalette(c("#2166ac", "white", "#b2182b"))(200),
+         # title     = "Pairwise Spearman ρ (X = non-significant after FDR)",
+         title     = "Pairwise Spearman ρ (X = non-significant, non-adjusted)",
+         mar       = c(0, 0, 2, 0))
+
+# ── 5. Significant pairs summary table ────────────────────────────────────
+results %>%
+  filter(sig) %>%
+  # arrange(desc(abs(rho))) %>%
+  arrange(sp1, sp2) %>% 
+  dplyr::select(sp1, sp2, rho, n_eff, p_raw, p_adj) %>%
+  kbl(caption = "Significant Spearman pairwise correlations for recruitment deviations for pairs of stocks. The raw p-value is the p-value for the t-test using the effective sample size corrected for autocorrelation; the adjusted p-value is the p-value correcting for false positives using the Benjamini-Hochberg FDR correction.") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+
+## Common boom/bust years
+
+```{r}
 # which years have the most boom/bust?
 as.data.frame(table(recdevs_all_long$Yr,
   recdevs_all_long$one_sd_boom_bust)) %>% 
@@ -76,6 +171,8 @@ recdevs_allstocks_table %>%
   kbl(caption = "Years where 1/3 or more of the stocks had bust recruitment.") %>% 
   kable_styling(latex_options = "HOLD_position")
 ```
+
+
 
 ## PCA showing common boom/bust years
 
